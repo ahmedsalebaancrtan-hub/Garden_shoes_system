@@ -1,0 +1,24 @@
+package repository
+
+import (
+	"github.com/gardenshoes/ahmed/models"
+	"gorm.io/gorm"
+)
+
+type UserRepo struct {
+	DB *gorm.DB
+}
+
+func RegisterRepo(db *gorm.DB) *UserRepo {
+	return &UserRepo{DB: db}
+}
+
+func (r *UserRepo) CreateUser(data models.Users) error {
+	return r.DB.Create(&data).Error
+}
+
+func (r *UserRepo) GetUserByEmail(email string) (models.Users, error) {
+	var user models.Users
+	err := r.DB.Where("email = ?", email).First(&user).Error
+	return user, err
+}
