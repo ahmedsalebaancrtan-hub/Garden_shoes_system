@@ -3,45 +3,43 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/gardenshoes/ahmed/models"
 	"github.com/gin-gonic/gin"
 )
 
-// RoleBlocker wuxuu xannibayaa qof kasta oo aan lahayn doorka la oggol yahay
-func RoleBlocker(allowedRoles ...models.Role) gin.HandlerFunc {
+// RoleRequired wuxuu u oggolaadaa kaliya user-ada leh roles-ka la rabo
+func RoleRequired(allowedRoles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Halkan waxaan ka soo qaadaynaa Role-ka qofka.
-		// Caadiyan waxaa laga soo saaraa JWT Token-ka marka qofku Login-dhameystiro.
-		// Tijaabo ahaan, waxaan hadda ka soo akhrinaynaa Header-ka la yiraahdo "X-User-Role"
-		userRole := c.GetHeader("X-User-Role")
-
-		if userRole == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{
+		// 1. Ka soo saar role-ka user-ka ee uu middleware-ka Authenticated() dhex dhigay Context-ka
+		userRole, exists := c.Get("role")
+		if !exists {
+			c.JSON(http.StatusForbidden, gin.H{
 				"is_success": false,
-				"message":    "Fadlan marka hore iska soo aqoonso nidaamka (Missing Authentication)",
+				"message":    "Ma haysatid oggolaansho aad ku booqato qaybtaan!",
 			})
-			c.Abort() // Halkan ku jooji inuu route-ka gudaha u galo
+			c.Abort()
 			return
 		}
 
-		// Hubi in role-ka qofku wato uu ku jiro kuwa la oggol yahay
+		// 2. Hubi in role-ka user-ka uu ku jiro liiska la oggolaaday (Allowed Roles)
 		isAllowed := false
 		for _, role := range allowedRoles {
-			if string(role) == userRole {
+			if role == userRole.(string) {
 				isAllowed = true
 				break
 			}
 		}
 
+		// 3. Haddii nambarka role-kiisa la waayo, albaabka ka xir
 		if !isAllowed {
 			c.JSON(http.StatusForbidden, gin.H{
 				"is_success": false,
 				"message":    "Ma haysatid oggolaansho aad ku booqato qaybtaan!",
 			})
-			c.Abort() // Jooji codsiga
+			c.Abort()
 			return
 		}
 
-		c.Next() // Haddi uu oggol yahay, u gudbi handler-ka saxda ah
+		// Haddii uu leeyahay role-ka saxda ah, u oggolaaw inuu gudbo
+		c.Next()
 	}
 }

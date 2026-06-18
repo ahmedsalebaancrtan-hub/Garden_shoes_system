@@ -16,6 +16,7 @@ type CreateLogindto struct {
 }
 
 type LoginUserResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+	User         models.User `json:"User"`
+	AccessToken  string      `json:"access_token"`
+	RefreshToken string      `json:"refresh_token"`
 }

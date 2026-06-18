@@ -7,36 +7,32 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type AppCofig struct {
+type AppConfig struct {
 	Port              string
-	DbUser            string
-	DbPassword        string
-	DbName            string
-	DbPort            string
-	DbHost            string
+	DBHost            string
+	DBUser            string
+	DBPassword        string
+	DBPort            string
+	DBName            string
 	Access_jwt_Token  string
 	Refresh_jwt_token string
-	EMAIL_USER        string
-	EMAIL_PASS        string
 }
 
-var Configuration AppCofig
+var Configuration AppConfig
 
 func InitEnv() {
+
 	err := godotenv.Load()
-
 	if err != nil {
-		log.Fatal("error Loading dotenv")
+		log.Fatal("Error Loading dotenv file")
 	}
-
 	Configuration.Port = os.Getenv("PORT")
-	Configuration.DbUser = os.Getenv("DB_USER")
-	Configuration.DbPassword = os.Getenv("DB_PASSWORD")
-	Configuration.DbName = os.Getenv("DB_NAME")
-	Configuration.DbPort = os.Getenv("DB_PORT")
-	Configuration.DbHost = os.Getenv("DB_HOST")
+	Configuration.DBHost = os.Getenv("DB_Host")
+	Configuration.DBUser = os.Getenv("DB_User")
+	Configuration.DBName = os.Getenv("DB_Name")
+	Configuration.DBPassword = os.Getenv("DB_Password")
+	Configuration.DBPort = os.Getenv("DB_Port")
 	Configuration.Access_jwt_Token = os.Getenv("Access_jwt_Token")
 	Configuration.Refresh_jwt_token = os.Getenv("Refresh_jwt_Token")
-	Configuration.EMAIL_USER = os.Getenv("EMAIL_USER")
-	Configuration.EMAIL_PASS = os.Getenv("EMAIL_PASS")
+
 }

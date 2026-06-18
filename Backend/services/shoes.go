@@ -40,7 +40,7 @@ func (svc *ShoeService) CreateShoe(data *dto.CreateShoeRequest) (int, *dto.ShoeR
 	}
 
 	if err := svc.ShoeRepo.CreateShoe(&shoe); err != nil {
-		return http.StatusInternalServerError, nil, errors.New("failed saving shoe inventory item")
+		return http.StatusInternalServerError, nil, err
 	}
 
 	// 3. Re-query or fetch structured entity data to construct Response payload

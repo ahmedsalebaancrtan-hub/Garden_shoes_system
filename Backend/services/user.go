@@ -36,7 +36,7 @@ func (svc *UserService) CreateUser(data *dtos.RegisterRequest) (int, error) {
 		return http.StatusInternalServerError, errors.New(constants.DefaultErrorMsg)
 	}
 
-	err = svc.Repo.CreateUser(models.Users{
+	err = svc.Repo.CreateUser(models.User{
 		FullName: data.FullName,
 		Phone:    data.Phone,
 		Email:    data.Email,
@@ -67,6 +67,7 @@ func (svc *UserService) LoginUser(data *dtos.CreateLogindto) (dtos.LoginUserResp
 	refresh, _ := helpers.GenerateJwt(user.Role, user.ID, user.Email, time.Now().Add(72*time.Hour).Unix(), true)
 
 	return dtos.LoginUserResponse{
+		User:         user,
 		AccessToken:  access,
 		RefreshToken: refresh,
 	}, http.StatusOK, nil

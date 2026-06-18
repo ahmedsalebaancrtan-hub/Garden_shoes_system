@@ -32,7 +32,11 @@ func (h *ShoeHandler) CreateShoe(c *gin.Context) {
 
 	status, response, err := h.ShoeSvc.CreateShoe(&body)
 	if err != nil {
-		c.JSON(status, gin.H{"message": err.Error(), "is_success": false})
+		// Halkan ayaan wax ka baddalnay si aan u aragno error-ka dhabta ah ee ka dhashay kaydinta!
+		c.JSON(status, gin.H{
+			"is_success": false,
+			"message":    err.Error(), // Kani waa fariintii Service-ka (e.g., "failed saving shoe inventory item")
+		})
 		return
 	}
 

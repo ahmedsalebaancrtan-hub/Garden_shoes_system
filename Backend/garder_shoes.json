@@ -1,0 +1,401 @@
+{
+	"info": {
+		"_postman_id": "garden-shoes-management-system",
+		"name": "Garden Shoes Management API",
+		"description": "Dhammaan endpoint-yada dukaanka Garden Shoes oo leh xogta (payloads) iyo jagooyinka (Roles) saxda ah.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Users & Auth",
+			"item": [
+				{
+					"name": "User Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullname\": \"Ahmed Ali\",\n  \"phone\": \"+252615551122\",\n  \"email\": \"admin@garden.com\",\n  \"username\": \"ahmed_admin\",\n  \"password\": \"password123\",\n  \"confirm_password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/users/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users",
+								"create"
+							]
+						}
+					}
+				},
+				{
+					"name": "User Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@garden.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/users/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users",
+								"login"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Suppliers",
+			"item": [
+				{
+					"name": "Create Supplier",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-User-Role",
+								"value": "ADMIN"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sup_name\": \"Somali Shoes Wholesaler\",\n  \"sup_address\": \"Wada wadnaha, Xamar\",\n  \"contact\": \"+252615555555\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/suppliers/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"suppliers",
+								"create"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get All Suppliers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-User-Role",
+								"value": "ADMIN"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/api/suppliers/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"suppliers",
+								""
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Shoes",
+			"item": [
+				{
+					"name": "Create Shoe",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-User-Role",
+								"value": "ADMIN"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"shoe_name\": \"Air Max 2026\",\n  \"shoe_type\": \"Sneakers\",\n  \"shoe_brand\": \"Nike\",\n  \"shoe_des\": \"Kabo aad u fudud oo beerta loogu talagallay\",\n  \"qty\": 100,\n  \"sup_id\": 1\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/shoes/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"shoes",
+								"create"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get All Shoes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-User-Role",
+								"value": "STAFF"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/api/shoes/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"shoes",
+								""
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Customers",
+			"item": [
+				{
+					"name": "Create Customer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-User-Role",
+								"value": "CASHIER"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"cus_name\": \"Maxamed Cali\",\n  \"cus_address\": \"Kaxda\",\n  \"cus_city\": \"Muqdisho\",\n  \"cus_phone\": \"+252612345678\",\n  \"cus_age\": 28\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/customers/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"customers",
+								"create"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get All Customers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-User-Role",
+								"value": "CASHIER"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/api/customers/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"customers",
+								""
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Employees",
+			"item": [
+				{
+					"name": "Create Employee",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-User-Role",
+								"value": "ADMIN"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emp_name\": \"Faadumo Axmed\",\n  \"emp_phone\": \"+252619999999\",\n  \"emp_email\": \"faduma@garden.com\",\n  \"emp_address\": \"Xamar Weyne\",\n  \"emp_shift\": \"Subax\",\n  \"hire_date\": \"2026-01-15\",\n  \"job_title\": \"Cashier\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/employees/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"employees",
+								"create"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get All Employees",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-User-Role",
+								"value": "ADMIN"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/api/employees/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"employees",
+								""
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Orders",
+			"item": [
+				{
+					"name": "Create Order",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-User-Role",
+								"value": "CASHIER"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"cus_id\": 1,\n  \"shoe_id\": 1,\n  \"emp_id\": 1,\n  \"qty\": 2\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/orders/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"orders",
+								"create"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Payments",
+			"item": [
+				{
+					"name": "Process Payment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-User-Role",
+								"value": "CASHIER"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"cus_id\": 1,\n  \"shoe_id\": 1,\n  \"qty\": 2,\n  \"amount_paid\": 111.00\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/payments/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"payments",
+								"create"
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}
