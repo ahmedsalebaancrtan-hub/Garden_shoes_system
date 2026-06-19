@@ -42,12 +42,14 @@ func RegisterRoute(r *gin.Engine) {
 		EmployeeGroup.POST("/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), EmployeeHandler.CreateEmployee)
 		EmployeeGroup.GET("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), EmployeeHandler.GetEmployees)
 	}
-	SalesProtected := ApiGroup.Group("/sales")
+	SalesProtected := ApiGroup.Group("/orders")
 	{
-		SalesProtected.POST("/orders/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "CASHIER"), OrderHandler.CreateOrder)
+		SalesProtected.POST("/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "CASHIER"), OrderHandler.CreateOrder)
+		SalesProtected.GET("/", middleware.Authenticated(), middleware.RoleRequired("STAFF", "ADMIN"), OrderHandler.GetAllOrders)
+		SalesProtected.GET("/:id", middleware.Authenticated(), middleware.RoleRequired("STAFF", "ADMIN"), OrderHandler.GetOrderByID)
 	}
-	paymentProtected := ApiGroup.Group("/payments")
+	PaymentGroup := ApiGroup.Group("/payments")
 	{
-		paymentProtected.POST("/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "CASHIER"), PaymentHandler.CreatePayment)
+		PaymentGroup.POST("/create", middleware.Authenticated(), middleware.RoleRequired("STAFF", "ADMIN"), PaymentHandler.ProcessPayment)
 	}
 }

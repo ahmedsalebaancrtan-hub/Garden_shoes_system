@@ -5,7 +5,6 @@ import (
 
 	dto "github.com/gardenshoes/ahmed/dto"
 	"github.com/gardenshoes/ahmed/infra"
-	"github.com/gardenshoes/ahmed/repository"
 	"github.com/gardenshoes/ahmed/services"
 	"github.com/gin-gonic/gin"
 )
@@ -15,26 +14,22 @@ type PaymentHandler struct {
 }
 
 func RegisterPaymentHandler() *PaymentHandler {
-	pr := repository.RegisterPaymentRepo(infra.DB)
-	cr := repository.RegisterCustomerRepo(infra.DB)
-	sr := repository.RegisterShoeRepo(infra.DB)
-
-	svc := services.NewPaymentService(pr, cr, sr)
+	svc := services.NewPaymentService(infra.DB)
 	return &PaymentHandler{PaymentSvc: svc}
 }
 
-func (h *PaymentHandler) CreatePayment(c *gin.Context) {
-	var body dto.CreatePaymentRequest
+func (h *PaymentHandler) ProcessPayment(c *gin.Context) {
+	var body dto.ProcessPaymentRequest
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Xogta lacag bixinta ma saxna", "error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"is_success": false, "error": err.Error()})
 		return
 	}
 
-	status, response, err := h.PaymentSvc.ProcessPayment(&body)
+	status, err := h.PaymentSvc.ProcessDebtPayment(&body)
 	if err != nil {
-		c.JSON(status, gin.H{"message": err.Error(), "is_success": false})
+		c.JSON(status, gin.H{"is_success": false, "message": err.Error()})
 		return
 	}
 
-	c.JSON(status, gin.H{"is_success": true, "message": "Lacagta si guul leh ayaa loo xareeyey", "data": response})
+	c.JSON(status, gin.H{"is_success": true, "message": "Lacag bixinta deynta si guul leh ayaa loo kaydiyey"})
 }

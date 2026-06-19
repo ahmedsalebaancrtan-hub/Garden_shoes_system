@@ -24,6 +24,7 @@ func NewOrderService(or *repository.OrderRepo, cr *repository.CustomerRepo, sr *
 }
 
 func (svc *OrderService) CreateOrder(data *dto.CreateOrderRequest) (int, *dto.OrderResponse, error) {
+	// 1. Hubi in Macmiilku jiro
 	err := svc.CustomerRepo.DB.First(&models.Customer{}, data.CusID).Error
 	if err != nil {
 		return http.StatusBadRequest, nil, errors.New("macmiilka la doortay kama jiro nidaamka")
@@ -35,7 +36,7 @@ func (svc *OrderService) CreateOrder(data *dto.CreateOrderRequest) (int, *dto.Or
 		return http.StatusBadRequest, nil, errors.New("shaqaalaha la doortay kama jiro nidaamka")
 	}
 
-	// 3. Bilow Transaction-ka Database-ka
+	// 3. Bilow Transaction-ka Database-ka (Xiritaanka badbaadada xisaabta)
 	tx := svc.DB.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -43,9 +44,9 @@ func (svc *OrderService) CreateOrder(data *dto.CreateOrderRequest) (int, *dto.Or
 		}
 	}()
 
-	// 4. Hubi kabaha iyo inta dukaanka taal
+	// 4. Hubi kabaha iyo inta dukaanka taal (Select for Update si looga badbaado isku dhex-dhac)
 	var shoe models.Shoe
-	if err := tx.First(&shoe, data.ShoeID).Error; err != nil {
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&shoe, data.ShoeID).Error; err != nil {
 		tx.Rollback()
 		return http.StatusBadRequest, nil, errors.New("kabaha la doortay kama jiraan dukaanka")
 	}
@@ -56,30 +57,61 @@ func (svc *OrderService) CreateOrder(data *dto.CreateOrderRequest) (int, *dto.Or
 		return http.StatusBadRequest, nil, errors.New("kabo ku filan dukaanka ma yaallaan, inta taal waa yar tahay")
 	}
 
-	// 5. Ka jor tirada la iibiyey kabihii dukaanka yiilay
+	// 5. CALCULATION: Ka jor tirada la iibiyey kabihii dukaanka yiilay
 	shoe.Qty = shoe.Qty - data.Qty
 	if err := tx.Save(&shoe).Error; err != nil {
 		tx.Rollback()
-		return http.StatusInternalServerError, nil, errors.New("waa ku guuldareysatay inaan cusbooneysiiyo tirada kabaha dukaanka")
+		return http.StatusInternalServerError, nil, errors.New("waa ku guuldareystay inaan cusbooneysiiyo tirada kabaha dukaanka")
 	}
 
 	// 6. Abuur dalabka (Order-ka)
+	totalPrice := float64(data.Qty) * 55.5
+
 	order := models.Order{
-		CusID:     data.CusID,
-		ShoeID:    data.ShoeID,
-		EmpID:     data.EmpID,
-		Qty:       data.Qty,
-		OrderDate: time.Now(),
+		CusID:      data.CusID,
+		ShoeID:     data.ShoeID,
+		EmpID:      data.EmpID,
+		Qty:        data.Qty,
+		TotalPrice: totalPrice,
+		OrderDate:  time.Now(),
+	}
+
+	// 2. Go'aami Status-ka si fudud
+	if data.AmountPaid == 0 {
+		order.Status = "DEBT" // Deyn buuxda
+	} else if data.AmountPaid >= totalPrice {
+		order.Status = "PAID" // Waa wada bixiyey
+	} else {
+		order.Status = "PARTIAL" // Qayb baa dhiman
 	}
 
 	if err := svc.OrderRepo.CreateOrder(tx, &order); err != nil {
 		tx.Rollback()
-		return http.StatusInternalServerError, nil, errors.New("waa ku guuldareysatay kaydinta dalabka")
+		return http.StatusInternalServerError, nil, errors.New("waa ku guuldareystay kaydinta dalabka")
+	}
+
+	// 7. CALCULATION & REPORT EFFECT: Si toos ah u dhal Payment ku xiran dalabkan mar quya ah
+	// Tani waxay hubinaysaa in wadarta lacagta (Report-ka guud) uu hadhow si toos ah u akhriyo
+	// Fiiro gaar ah: data.AmountPaid waa inuu ku jiro CreateOrderRequest DTO-gaaga
+	if data.AmountPaid > 0 {
+		payment := models.Payment{
+			OrderID:       order.ID, // Hadda si toos ah ayay isu xirayaan!
+			CusID:         order.CusID,
+			ShoeID:        order.ShoeID,
+			Qty:           order.Qty,
+			AmountPaid:    data.AmountPaid,
+			PaymentMethod: data.PaymentMethod, // CASH ama ZAAD
+			PaymentDate:   time.Now(),
+		}
+		if err := tx.Create(&payment).Error; err != nil {
+			tx.Rollback()
+			return http.StatusInternalServerError, nil, errors.New("waa ku guuldareystay diiwangelinta lacagta")
+		}
 	}
 
 	// Commit Transaction hadii wax kasta guul ku dhammaadeen
 	if err := tx.Commit().Error; err != nil {
-		return http.StatusInternalServerError, nil, errors.New("waa ku guuldareysatay dhameystirka iibka")
+		return http.StatusInternalServerError, nil, errors.New("waa ku guuldareystay dhameystirka iibka")
 	}
 
 	// Soo jiid xogta oo buuxda si loogu celiyo Response-ka
