@@ -29,3 +29,10 @@ func (r *ShoeRepo) GetShoeByID(id uint) (models.Shoe, error) {
 	err := r.DB.Preload("Supplier").First(&shoe, id).Error
 	return shoe, err
 }
+func (r *ShoeRepo) UpdateShoe(shoe *models.Shoe) error {
+	return r.DB.Save(shoe).Error
+}
+
+func (r *ShoeRepo) DeleteShoe(id uint) error {
+	return r.DB.Delete(&models.Shoe{}, id).Error
+}

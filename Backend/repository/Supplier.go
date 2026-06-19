@@ -28,3 +28,10 @@ func (r *SupplierRepo) GetSupplierByID(id uint) (models.Supplier, error) {
 	err := r.DB.First(&supplier, id).Error
 	return supplier, err
 }
+func (r *SupplierRepo) UpdateSupplier(supplier *models.Supplier) error {
+	return r.DB.Save(supplier).Error
+}
+
+func (r *SupplierRepo) DeleteSupplier(id uint) error {
+	return r.DB.Delete(&models.Supplier{}, id).Error
+}

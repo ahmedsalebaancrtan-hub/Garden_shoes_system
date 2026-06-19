@@ -18,6 +18,7 @@ func NewEmployeeService(repo *repository.EmployeeRepo) *EmployeeService {
 	return &EmployeeService{Repo: repo}
 }
 
+// CREATE EMPLOYEE
 func (svc *EmployeeService) CreateEmployee(data *dto.CreateEmployeeRequest) (int, *dto.EmployeeResponse, error) {
 	// Hubi in emaylku jiro
 	_, err := svc.Repo.GetEmployeeByEmail(data.EmpEmail)
@@ -42,7 +43,7 @@ func (svc *EmployeeService) CreateEmployee(data *dto.CreateEmployeeRequest) (int
 	}
 
 	if err := svc.Repo.CreateEmployee(&employee); err != nil {
-		return http.StatusInternalServerError, nil, errors.New("waa ku guuldareysatay kaydinta shaqaalaha")
+		return http.StatusInternalServerError, nil, errors.New("waa ku guuldareystay kaydinta shaqaalaha")
 	}
 
 	response := &dto.EmployeeResponse{
@@ -59,10 +60,11 @@ func (svc *EmployeeService) CreateEmployee(data *dto.CreateEmployeeRequest) (int
 	return http.StatusCreated, response, nil
 }
 
+// LIST ALL EMPLOYEES
 func (svc *EmployeeService) ListAllEmployees() (int, []dto.EmployeeResponse, error) {
 	employees, err := svc.Repo.GetAllEmployees()
 	if err != nil {
-		return http.StatusInternalServerError, nil, errors.New("waa ku guuldareysatay soo jiidashada shaqaalaha")
+		return http.StatusInternalServerError, nil, errors.New("waa ku guuldareystay soo jiidashada shaqaalaha")
 	}
 
 	var list []dto.EmployeeResponse
@@ -80,4 +82,40 @@ func (svc *EmployeeService) ListAllEmployees() (int, []dto.EmployeeResponse, err
 	}
 
 	return http.StatusOK, list, nil
+}
+
+// UPDATE EMPLOYEE (Halkan waxaa loo beddelayed svc.Repo, magacyadii tiirarkana waa la saxay)
+func (svc *EmployeeService) UpdateEmployee(id uint, data *dto.CreateEmployeeRequest) (int, error) {
+	employee, err := svc.Repo.GetEmployeeByID(id)
+	if err != nil {
+		return http.StatusNotFound, errors.New("shaqaalahan lagama helin nidaamka")
+	}
+
+	// Badal qaabka taariikhda cusub
+	parsedDate, err := time.Parse("2006-01-02", data.HireDate)
+	if err != nil {
+		return http.StatusBadRequest, errors.New("qaabka taariikhda hire_date ma saxna, isticmaal (YYYY-MM-DD)")
+	}
+
+	// Waafaji magacyada saxda ah ee moodalkaaga ku jira
+	employee.EmpName = data.EmpName
+	employee.EmpPhone = data.EmpPhone
+	employee.EmpEmail = data.EmpEmail
+	employee.EmpAddress = data.EmpAddress
+	employee.EmpShift = data.EmpShift
+	employee.HireDate = parsedDate
+	employee.JobTitle = data.JobTitle
+
+	if err := svc.Repo.UpdateEmployee(employee); err != nil {
+		return http.StatusInternalServerError, errors.New("waa ku guuldareystay casriyeynta shaqaalaha")
+	}
+	return http.StatusOK, nil
+}
+
+// DELETE EMPLOYEE (Halkan waxaa loo beddelay svc.Repo)
+func (svc *EmployeeService) DeleteEmployee(id uint) (int, error) {
+	if err := svc.Repo.DeleteEmployee(id); err != nil {
+		return http.StatusInternalServerError, errors.New("waa ku guuldareystay tirtirista shaqaalaha")
+	}
+	return http.StatusOK, nil
 }

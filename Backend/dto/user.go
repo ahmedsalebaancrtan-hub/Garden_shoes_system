@@ -15,6 +15,12 @@ type CreateLogindto struct {
 	Password string `json:"password" binding:"required,min=8,max=128"`
 }
 
+type WhoAmIResponse struct {
+	UserID   uint   `json:"user_id"`
+	Username string `json:"username"`
+	Role     string `json:"role"`
+}
+
 type LoginUserResponse struct {
 	User         models.User `json:"User"`
 	AccessToken  string      `json:"access_token"`

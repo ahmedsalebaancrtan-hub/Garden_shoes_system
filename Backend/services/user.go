@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gardenshoes/ahmed/constants"
+	dto "github.com/gardenshoes/ahmed/dto"
 	dtos "github.com/gardenshoes/ahmed/dto"
 	"github.com/gardenshoes/ahmed/helpers"
 	"github.com/gardenshoes/ahmed/models"
@@ -50,8 +51,7 @@ func (svc *UserService) CreateUser(data *dtos.RegisterRequest) (int, error) {
 	return http.StatusCreated, nil
 }
 
-//login api
-
+// LOGIN USER
 func (svc *UserService) LoginUser(data *dtos.CreateLogindto) (dtos.LoginUserResponse, int, error) {
 	email := strings.ToLower(data.Email)
 
@@ -71,4 +71,21 @@ func (svc *UserService) LoginUser(data *dtos.CreateLogindto) (dtos.LoginUserResp
 		AccessToken:  access,
 		RefreshToken: refresh,
 	}, http.StatusOK, nil
+}
+
+// KANI WAA WHOAMI SERVICE-KII OO SAXAN
+func (svc *UserService) GetUserInfo(userID uint) (*dto.WhoAmIResponse, error) {
+	var user models.User
+
+	// Halkaan waxaa loo beddelay svc.Repo.DB si uu u garto database-ka dhex fariista Repo-ga
+	if err := svc.Repo.DB.First(&user, userID).Error; err != nil {
+		return nil, errors.New("can't find user info")
+	}
+
+	// Username waxaa loo beddelay FullName maadaama uu yahay tiirka moodalkaaga ku jira
+	return &dto.WhoAmIResponse{
+		UserID:   user.ID,
+		Username: user.FullName,
+		Role:     string(user.Role),
+	}, nil
 }

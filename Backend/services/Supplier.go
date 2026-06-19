@@ -17,6 +17,7 @@ func NewSupplierService(repo *repository.SupplierRepo) *SupplierService {
 	return &SupplierService{Repo: repo}
 }
 
+// CREATE SUPPLIER
 func (svc *SupplierService) CreateSupplier(data *dto.CreateSupplierRequest) (int, *dto.SupplierResponse, error) {
 	supplier := models.Supplier{
 		SupName:    data.SupName,
@@ -38,6 +39,7 @@ func (svc *SupplierService) CreateSupplier(data *dto.CreateSupplierRequest) (int
 	return http.StatusCreated, response, nil
 }
 
+// LIST ALL SUPPLIERS
 func (svc *SupplierService) ListAllSuppliers() (int, []dto.SupplierResponse, error) {
 	suppliers, err := svc.Repo.GetAllSuppliers()
 	if err != nil {
@@ -55,4 +57,29 @@ func (svc *SupplierService) ListAllSuppliers() (int, []dto.SupplierResponse, err
 	}
 
 	return http.StatusOK, responseList, nil
+}
+
+// UPDATE SUPPLIER (Halkan waxaa loo beddelay svc.Repo)
+func (svc *SupplierService) UpdateSupplier(id uint, data *dto.CreateSupplierRequest) (int, error) {
+	supplier, err := svc.Repo.GetSupplierByID(id)
+	if err != nil {
+		return http.StatusNotFound, errors.New("alaab-keenahan lagama helin nidaamka")
+	}
+
+	supplier.SupName = data.SupName
+	supplier.SupAddress = data.SupAddress
+	supplier.Contact = data.Contact
+
+	if err := svc.Repo.UpdateSupplier(&supplier); err != nil {
+		return http.StatusInternalServerError, errors.New("waa ku guuldareystay casriyeynta alaab-keenaha")
+	}
+	return http.StatusOK, nil
+}
+
+// DELETE SUPPLIER (Halkan waxaa loo beddelay svc.Repo)
+func (svc *SupplierService) DeleteSupplier(id uint) (int, error) {
+	if err := svc.Repo.DeleteSupplier(id); err != nil {
+		return http.StatusInternalServerError, errors.New("waa ku guuldareystay tirtirista alaab-keenaha")
+	}
+	return http.StatusOK, nil
 }

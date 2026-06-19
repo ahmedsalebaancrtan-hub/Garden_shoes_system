@@ -103,3 +103,28 @@ func (svc *ShoeService) GetLowStockShoes() ([]dto.LowStockResponse, error) {
 
 	return results, err
 }
+func (svc *ShoeService) UpdateShoe(id uint, data *dto.CreateShoeRequest) (int, error) {
+	shoe, err := svc.ShoeRepo.GetShoeByID(id)
+	if err != nil {
+		return http.StatusNotFound, errors.New("kabahan lagama helin dukaanka")
+	}
+
+	shoe.ShoeName = data.ShoeName
+	shoe.ShoeType = data.ShoeType
+	shoe.ShoeBrand = data.ShoeBrand
+	shoe.ShoeDes = data.ShoeDes
+	shoe.Qty = data.Qty
+	shoe.SupID = data.SupID
+
+	if err := svc.ShoeRepo.UpdateShoe(&shoe); err != nil {
+		return http.StatusInternalServerError, errors.New("waa ku guuldareystay casriyeynta kabaha")
+	}
+	return http.StatusOK, nil
+}
+
+func (svc *ShoeService) DeleteShoe(id uint) (int, error) {
+	if err := svc.ShoeRepo.DeleteShoe(id); err != nil {
+		return http.StatusInternalServerError, errors.New("waa ku guuldareystay tirtirista kabaha")
+	}
+	return http.StatusOK, nil
+}

@@ -28,3 +28,17 @@ func (r *EmployeeRepo) GetAllEmployees() ([]models.Employee, error) {
 	err := r.DB.Find(&employees).Error
 	return employees, err
 }
+func (r *EmployeeRepo) UpdateEmployee(employee *models.Employee) error {
+	return r.DB.Save(employee).Error
+}
+
+func (r *EmployeeRepo) DeleteEmployee(id uint) error {
+	return r.DB.Delete(&models.Employee{}, id).Error
+}
+func (r *EmployeeRepo) GetEmployeeByID(id uint) (*models.Employee, error) {
+	var employee models.Employee
+	if err := r.DB.First(&employee, id).Error; err != nil {
+		return nil, err
+	}
+	return &employee, nil
+}
