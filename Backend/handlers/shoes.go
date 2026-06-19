@@ -52,3 +52,17 @@ func (h *ShoeHandler) GetShoes(c *gin.Context) {
 
 	c.JSON(status, gin.H{"is_success": true, "data": data})
 }
+func (h *ShoeHandler) LowStockAlert(c *gin.Context) {
+	// Wuxuu si toos ah u wacayaa ShoeSvc oo aan hadda ku darnay koodhka
+	results, err := h.ShoeSvc.GetLowStockShoes()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"is_success": false, "message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"is_success": true,
+		"message":    "Alaabta dukaanka ku sii dhammaanaysa si guul leh ayaa loo soo saaray",
+		"data":       results,
+	})
+}

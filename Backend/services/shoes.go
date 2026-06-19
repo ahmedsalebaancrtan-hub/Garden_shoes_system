@@ -90,3 +90,16 @@ func (svc *ShoeService) ListAllShoes() (int, []dto.ShoeResponse, error) {
 
 	return http.StatusOK, list, nil
 }
+
+// QODOBKII 2-AAD: Waxaa loo beddelay (svc *ShoeService) waxaana loo adeegsaday ShoeRepo
+func (svc *ShoeService) GetLowStockShoes() ([]dto.LowStockResponse, error) {
+	var results []dto.LowStockResponse
+
+	// Maadaama uu koodhku dhex joogo ShoeService, wuxuu toos u wacayaa DB-ga dhex yaal ShoeRepo
+	err := svc.ShoeRepo.DB.Model(&models.Shoe{}).
+		Select("shoe_id, shoe_name, shoe_brand, qty").
+		Where("qty <= ?", 5).
+		Scan(&results).Error
+
+	return results, err
+}

@@ -16,7 +16,7 @@ type OrderService struct {
 	CustomerRepo *repository.CustomerRepo
 	ShoeRepo     *repository.ShoeRepo
 	EmployeeRepo *repository.EmployeeRepo
-	DB           *gorm.DB // Loogu talagallay Transactions
+	DB           *gorm.DB
 }
 
 func NewOrderService(or *repository.OrderRepo, cr *repository.CustomerRepo, sr *repository.ShoeRepo, er *repository.EmployeeRepo, db *gorm.DB) *OrderService {
@@ -24,19 +24,17 @@ func NewOrderService(or *repository.OrderRepo, cr *repository.CustomerRepo, sr *
 }
 
 func (svc *OrderService) CreateOrder(data *dto.CreateOrderRequest) (int, *dto.OrderResponse, error) {
-	// 1. Hubi in Macmiilku jiro
+
 	err := svc.CustomerRepo.DB.First(&models.Customer{}, data.CusID).Error
 	if err != nil {
 		return http.StatusBadRequest, nil, errors.New("macmiilka la doortay kama jiro nidaamka")
 	}
 
-	// 2. Hubi in Shaqaaluhu jiro
 	err = svc.EmployeeRepo.DB.First(&models.Employee{}, data.EmpID).Error
 	if err != nil {
 		return http.StatusBadRequest, nil, errors.New("shaqaalaha la doortay kama jiro nidaamka")
 	}
 
-	// 3. Bilow Transaction-ka Database-ka (Xiritaanka badbaadada xisaabta)
 	tx := svc.DB.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -44,28 +42,24 @@ func (svc *OrderService) CreateOrder(data *dto.CreateOrderRequest) (int, *dto.Or
 		}
 	}()
 
-	// 4. Hubi kabaha iyo inta dukaanka taal (Select for Update si looga badbaado isku dhex-dhac)
 	var shoe models.Shoe
 	if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&shoe, data.ShoeID).Error; err != nil {
 		tx.Rollback()
 		return http.StatusBadRequest, nil, errors.New("kabaha la doortay kama jiraan dukaanka")
 	}
 
-	// Miyay ku filan yihiin tirada la rabo?
 	if shoe.Qty < data.Qty {
 		tx.Rollback()
 		return http.StatusBadRequest, nil, errors.New("kabo ku filan dukaanka ma yaallaan, inta taal waa yar tahay")
 	}
 
-	// 5. CALCULATION: Ka jor tirada la iibiyey kabihii dukaanka yiilay
 	shoe.Qty = shoe.Qty - data.Qty
 	if err := tx.Save(&shoe).Error; err != nil {
 		tx.Rollback()
 		return http.StatusInternalServerError, nil, errors.New("waa ku guuldareystay inaan cusbooneysiiyo tirada kabaha dukaanka")
 	}
 
-	// 6. Abuur dalabka (Order-ka)
-	totalPrice := float64(data.Qty) * 55.5
+	totalPrice := float64(data.Qty) * shoe.Price
 
 	order := models.Order{
 		CusID:      data.CusID,
@@ -76,13 +70,12 @@ func (svc *OrderService) CreateOrder(data *dto.CreateOrderRequest) (int, *dto.Or
 		OrderDate:  time.Now(),
 	}
 
-	// 2. Go'aami Status-ka si fudud
 	if data.AmountPaid == 0 {
-		order.Status = "DEBT" // Deyn buuxda
+		order.Status = "DEBT"
 	} else if data.AmountPaid >= totalPrice {
-		order.Status = "PAID" // Waa wada bixiyey
+		order.Status = "PAID"
 	} else {
-		order.Status = "PARTIAL" // Qayb baa dhiman
+		order.Status = "PARTIAL"
 	}
 
 	if err := svc.OrderRepo.CreateOrder(tx, &order); err != nil {
@@ -90,17 +83,14 @@ func (svc *OrderService) CreateOrder(data *dto.CreateOrderRequest) (int, *dto.Or
 		return http.StatusInternalServerError, nil, errors.New("waa ku guuldareystay kaydinta dalabka")
 	}
 
-	// 7. CALCULATION & REPORT EFFECT: Si toos ah u dhal Payment ku xiran dalabkan mar quya ah
-	// Tani waxay hubinaysaa in wadarta lacagta (Report-ka guud) uu hadhow si toos ah u akhriyo
-	// Fiiro gaar ah: data.AmountPaid waa inuu ku jiro CreateOrderRequest DTO-gaaga
 	if data.AmountPaid > 0 {
 		payment := models.Payment{
-			OrderID:       order.ID, // Hadda si toos ah ayay isu xirayaan!
+			OrderID:       order.ID,
 			CusID:         order.CusID,
 			ShoeID:        order.ShoeID,
 			Qty:           order.Qty,
 			AmountPaid:    data.AmountPaid,
-			PaymentMethod: data.PaymentMethod, // CASH ama ZAAD
+			PaymentMethod: data.PaymentMethod,
 			PaymentDate:   time.Now(),
 		}
 		if err := tx.Create(&payment).Error; err != nil {
@@ -109,12 +99,10 @@ func (svc *OrderService) CreateOrder(data *dto.CreateOrderRequest) (int, *dto.Or
 		}
 	}
 
-	// Commit Transaction hadii wax kasta guul ku dhammaadeen
 	if err := tx.Commit().Error; err != nil {
 		return http.StatusInternalServerError, nil, errors.New("waa ku guuldareystay dhameystirka iibka")
 	}
 
-	// Soo jiid xogta oo buuxda si loogu celiyo Response-ka
 	fullOrder, _ := svc.OrderRepo.GetOrderByID(order.ID)
 
 	response := &dto.OrderResponse{

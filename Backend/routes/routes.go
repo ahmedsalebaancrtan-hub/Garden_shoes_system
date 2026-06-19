@@ -16,6 +16,7 @@ func RegisterRoute(r *gin.Engine) {
 	EmployeeHandler := handlers.RegisterEmployeeHandler()
 	OrderHandler := handlers.RegisterOrderHandler()
 	PaymentHandler := handlers.RegisterPaymentHandler()
+	ReportHandler := handlers.RegisterReportHandler()
 	UserGroup := ApiGroup.Group("/users")
 	{
 		UserGroup.POST("/create", UserHandler.CreateUser)
@@ -31,6 +32,7 @@ func RegisterRoute(r *gin.Engine) {
 	{
 		ShoeGroup.POST("/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), ShoeHandler.CreateShoe)
 		ShoeGroup.GET("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), ShoeHandler.GetShoes)
+		ShoeGroup.GET("/low-stock", middleware.Authenticated(), ShoeHandler.LowStockAlert)
 	}
 	CustomerGroup := ApiGroup.Group("/customers")
 	{
@@ -51,5 +53,11 @@ func RegisterRoute(r *gin.Engine) {
 	PaymentGroup := ApiGroup.Group("/payments")
 	{
 		PaymentGroup.POST("/create", middleware.Authenticated(), middleware.RoleRequired("STAFF", "ADMIN"), PaymentHandler.ProcessPayment)
+	}
+	ReportGroup := ApiGroup.Group("/reports")
+	{
+		ReportGroup.GET("/dashboard", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), ReportHandler.GetDailyDashboard)
+		ReportGroup.GET("/customer-monthly", middleware.Authenticated(), ReportHandler.GetCustomerMonthlyReport)
+		ReportGroup.GET("/invoice/:order_id", middleware.Authenticated(), ReportHandler.GetSingleInvoiceReport)
 	}
 }
