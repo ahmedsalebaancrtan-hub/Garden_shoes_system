@@ -25,13 +25,13 @@ func NewOrderService(or *repository.OrderRepo, cr *repository.CustomerRepo, sr *
 
 func (svc *OrderService) CreateOrder(data *dto.CreateOrderRequest) (int, *dto.OrderResponse, error) {
 
-	err := svc.CustomerRepo.DB.First(&models.Customer{}, data.CusID).Error
-	if err != nil {
+	var customer models.Customer
+	if err := svc.CustomerRepo.DB.First(&customer, data.CusID).Error; err != nil {
 		return http.StatusBadRequest, nil, errors.New("macmiilka la doortay kama jiro nidaamka")
 	}
 
-	err = svc.EmployeeRepo.DB.First(&models.Employee{}, data.EmpID).Error
-	if err != nil {
+	var employee models.Employee
+	if err := svc.EmployeeRepo.DB.First(&employee, data.EmpID).Error; err != nil {
 		return http.StatusBadRequest, nil, errors.New("shaqaalaha la doortay kama jiro nidaamka")
 	}
 
@@ -103,24 +103,22 @@ func (svc *OrderService) CreateOrder(data *dto.CreateOrderRequest) (int, *dto.Or
 		return http.StatusInternalServerError, nil, errors.New("waa ku guuldareystay dhameystirka iibka")
 	}
 
-	fullOrder, _ := svc.OrderRepo.GetOrderByID(order.ID)
-
 	response := &dto.OrderResponse{
-		OrderID:   fullOrder.ID,
-		Qty:       fullOrder.Qty,
-		OrderDate: fullOrder.OrderDate.Format("2006-01-02 15:04:05"),
+		OrderID:   order.ID,
+		Qty:       order.Qty,
+		OrderDate: order.OrderDate.Format("2006-01-02 15:04:05"),
 		Customer: &dto.CustomerResponse{
-			ID:      fullOrder.Customer.ID,
-			CusName: fullOrder.Customer.CusName,
+			ID:      customer.ID,
+			CusName: customer.CusName,
 		},
 		Shoe: &dto.ShoeResponse{
-			ID:        fullOrder.Shoe.ID,
-			ShoeName:  fullOrder.Shoe.ShoeName,
-			ShoeBrand: fullOrder.Shoe.ShoeBrand,
+			ID:        shoe.ID,
+			ShoeName:  shoe.ShoeName,
+			ShoeBrand: shoe.ShoeBrand,
 		},
 		Employee: &dto.EmployeeResponse{
-			ID:      fullOrder.Employee.ID,
-			EmpName: fullOrder.Employee.EmpName,
+			ID:      employee.ID,
+			EmpName: employee.EmpName,
 		},
 	}
 

@@ -36,6 +36,7 @@ func (svc *ShoeService) CreateShoe(data *dto.CreateShoeRequest) (int, *dto.ShoeR
 		ShoeBrand: data.ShoeBrand,
 		ShoeDes:   data.ShoeDes,
 		Qty:       data.Qty,
+		Price:     data.Price, // 🌟 XALKA: Halkan waxaa ka maqnaa mapping-ka Price!
 		SupID:     data.SupID,
 	}
 
@@ -53,6 +54,7 @@ func (svc *ShoeService) CreateShoe(data *dto.CreateShoeRequest) (int, *dto.ShoeR
 		ShoeBrand: savedShoe.ShoeBrand,
 		ShoeDes:   savedShoe.ShoeDes,
 		Qty:       savedShoe.Qty,
+		Price:     savedShoe.Price, // Kani wuxuu hadda keeni doonaa qiimihii saxda ahaa
 		Supplier: &dto.SupplierResponse{
 			ID:         savedShoe.Supplier.ID,
 			SupName:    savedShoe.Supplier.SupName,
@@ -79,6 +81,7 @@ func (svc *ShoeService) ListAllShoes() (int, []dto.ShoeResponse, error) {
 			ShoeBrand: s.ShoeBrand,
 			ShoeDes:   s.ShoeDes,
 			Qty:       s.Qty,
+			Price:     s.Price, // Kani wuxuu ka soo akhrisanayaa DB dhexdeeda
 			Supplier: &dto.SupplierResponse{
 				ID:         s.Supplier.ID,
 				SupName:    s.Supplier.SupName,
@@ -91,11 +94,9 @@ func (svc *ShoeService) ListAllShoes() (int, []dto.ShoeResponse, error) {
 	return http.StatusOK, list, nil
 }
 
-// QODOBKII 2-AAD: Waxaa loo beddelay (svc *ShoeService) waxaana loo adeegsaday ShoeRepo
 func (svc *ShoeService) GetLowStockShoes() ([]dto.LowStockResponse, error) {
 	var results []dto.LowStockResponse
 
-	// Maadaama uu koodhku dhex joogo ShoeService, wuxuu toos u wacayaa DB-ga dhex yaal ShoeRepo
 	err := svc.ShoeRepo.DB.Model(&models.Shoe{}).
 		Select("shoe_id, shoe_name, shoe_brand, qty").
 		Where("qty <= ?", 5).
@@ -103,6 +104,7 @@ func (svc *ShoeService) GetLowStockShoes() ([]dto.LowStockResponse, error) {
 
 	return results, err
 }
+
 func (svc *ShoeService) UpdateShoe(id uint, data *dto.CreateShoeRequest) (int, error) {
 	shoe, err := svc.ShoeRepo.GetShoeByID(id)
 	if err != nil {
@@ -114,6 +116,7 @@ func (svc *ShoeService) UpdateShoe(id uint, data *dto.CreateShoeRequest) (int, e
 	shoe.ShoeBrand = data.ShoeBrand
 	shoe.ShoeDes = data.ShoeDes
 	shoe.Qty = data.Qty
+	shoe.Price = data.Price // 🌟 XALKA: Sidoo kale halkan waxaa ka maqnaa casriyeynta Price!
 	shoe.SupID = data.SupID
 
 	if err := svc.ShoeRepo.UpdateShoe(&shoe); err != nil {

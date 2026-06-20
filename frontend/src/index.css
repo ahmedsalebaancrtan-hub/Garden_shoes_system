@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+@theme {
+  --color-garden-dark: #00471B;
+  --color-garden-lime: #BEE64B;
+}

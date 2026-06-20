@@ -81,16 +81,30 @@ func (r *OrderRepo) CreateOrderWithStockCheck(order *models.Order, amountPaid fl
 	return order, nil
 }
 
-// 3. Koodhkii hore ee GetAllOrders (Wuu sii joogayaa)
 func (r *OrderRepo) GetAllOrders() ([]models.Order, error) {
 	var orders []models.Order
-	err := r.DB.Preload("Customer").Preload("Shoe").Preload("Shoe.Supplier").Preload("Employee").Find(&orders).Error
-	return orders, err
+
+	if err := r.DB.
+		Preload("Customer").
+		Preload("Shoe").
+		Preload("Employee").
+		Order("o_id desc").
+		Find(&orders).Error; err != nil {
+		return nil, err
+	}
+
+	return orders, nil
 }
 
-// 4. Koodhkii hore ee GetOrderByID (Wuu sii joogayaa)
 func (r *OrderRepo) GetOrderByID(id uint) (models.Order, error) {
 	var order models.Order
-	err := r.DB.Preload("Customer").Preload("Shoe").Preload("Shoe.Supplier").Preload("Employee").First(&order, id).Error
+
+	err := r.DB.
+		Preload("Customer").
+		Preload("Shoe").
+		Preload("Shoe.Supplier").
+		Preload("Employee").
+		First(&order, id).Error
+
 	return order, err
 }

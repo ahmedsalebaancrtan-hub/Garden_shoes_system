@@ -48,16 +48,19 @@ func (h *UserHandler) LoginUser(c *gin.Context) {
 	c.JSON(statusCode, gin.H{"message": "Login successful", "data": response})
 }
 func (h *UserHandler) WhoAmI(c *gin.Context) {
-	// Waxay xogta ka soo dhex bixinaysaa Middleware-ka Authenticated() oo aad horey u haysatay
-	userID, exists := c.Get("userID") // Hubi magaca aad ku dhex kaydisay middleware-ka (e.g., "userID" ama "user_id")
+	// Hubi labada magacba si aad u badbaaddo
+	userID, exists := c.Get("user_id")
+	if !exists {
+		userID, exists = c.Get("userId")
+	}
+
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"is_success": false, "message": "Fadlan marka hore soo login gareey"})
 		return
 	}
 
-	// Maadaama c.Get uu soo celiyo interface{}, waxaan u beddelaynaa uint
+	// Nidaamka intiisa kale weey saxsan tahay...
 	uid := userID.(uint)
-
 	userInfo, err := h.Usersvc.GetUserInfo(uid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"is_success": false, "message": err.Error()})

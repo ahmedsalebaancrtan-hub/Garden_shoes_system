@@ -28,14 +28,14 @@ func RegisterRoute(r *gin.Engine) {
 	{
 		SupplierGroup.POST("/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), SupplierHandler.CreateSupplier)
 		SupplierGroup.GET("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), SupplierHandler.GetSuppliers)
-		SupplierGroup.PUT("/update", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), SupplierHandler.UpdateSupplier)
+		SupplierGroup.PUT("/update/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), SupplierHandler.UpdateSupplier)
 		SupplierGroup.DELETE("/delete/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), SupplierHandler.DeleteSupplier)
 	}
 	ShoeGroup := ApiGroup.Group("/shoes")
 	{
 		ShoeGroup.POST("/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), ShoeHandler.CreateShoe)
 		ShoeGroup.GET("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), ShoeHandler.GetShoes)
-		ShoeGroup.PUT("/update", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), ShoeHandler.UpdateShoe)
+		ShoeGroup.PUT("/update/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), ShoeHandler.UpdateShoe)
 		ShoeGroup.DELETE("/delete/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), ShoeHandler.DeleteShoe)
 		ShoeGroup.GET("/low-stock", middleware.Authenticated(), ShoeHandler.LowStockAlert)
 
@@ -44,14 +44,14 @@ func RegisterRoute(r *gin.Engine) {
 	{
 		CustomerGroup.POST("/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), CustomerHandler.CreateCustomer)
 		CustomerGroup.GET("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), CustomerHandler.GetCustomers)
-		CustomerGroup.PUT("/update", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), CustomerHandler.UpdateCustomer)
+		CustomerGroup.PUT("/update/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), CustomerHandler.UpdateCustomer)
 		CustomerGroup.DELETE("/delete/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), CustomerHandler.DeleteCustomer)
 	}
 	EmployeeGroup := ApiGroup.Group("/employees")
 	{
 		EmployeeGroup.POST("/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), EmployeeHandler.CreateEmployee)
 		EmployeeGroup.GET("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), EmployeeHandler.GetEmployees)
-		EmployeeGroup.PUT("/update", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), EmployeeHandler.UpdateEmployee)
+		EmployeeGroup.PUT("/update/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), EmployeeHandler.UpdateEmployee)
 		EmployeeGroup.DELETE("/delete/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), EmployeeHandler.DeleteEmployee)
 	}
 	SalesProtected := ApiGroup.Group("/orders")

@@ -17,6 +17,7 @@ type ShoeResponse struct {
 	ShoeBrand string            `json:"shoe_brand"`
 	ShoeDes   string            `json:"shoe_des"`
 	Qty       int               `json:"qty"`
+	Price     float64           `json:"price"`
 	Supplier  *SupplierResponse `json:"supplier,omitempty"`
 }
 type LowStockResponse struct {

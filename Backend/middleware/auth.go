@@ -73,19 +73,44 @@ func Authenticated() gin.HandlerFunc {
 
 		email := claims["sub"]
 		role := claims["role"]
+		var rawID interface{}
+		var idExists bool
 
-		userIDFloat, ok := claims["userID"].(float64)
-		if !ok {
+		// Check for both camelCase "userID" (from helper) and snake_case "user_id"
+		if rawID, idExists = claims["userID"]; !idExists {
+			rawID, idExists = claims["user_id"]
+		}
+
+		if !idExists || rawID == nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"message":    "invalid user id",
+				"message":    "invalid user id: claim missing from token",
 				"is_success": false,
 			})
 			return
 		}
 
-		userID := uint(userIDFloat)
+		// Dynamically handle type conversions safely depending on how JWT unmarshals it
+		var userID uint
+		switch v := rawID.(type) {
+		case float64:
+			userID = uint(v)
+		case int:
+			userID = uint(v)
+		case int64:
+			userID = uint(v)
+		case uint:
+			userID = v
+		default:
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"message":    "invalid user id: unexpected data format type",
+				"is_success": false,
+			})
+			return
+		}
 
-		c.Set("user_id", userID)
+		// 🌟 CRITICAL ALIGNMENT: Save to BOTH keys to avoid any handler mismatch bugs!
+		c.Set("user_id", userID) // snake_case
+		c.Set("userId", userID)
 		c.Set("email", email)
 		c.Set("role", role)
 
