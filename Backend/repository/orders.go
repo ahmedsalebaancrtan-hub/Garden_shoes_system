@@ -84,10 +84,14 @@ func (r *OrderRepo) CreateOrderWithStockCheck(order *models.Order, amountPaid fl
 func (r *OrderRepo) GetAllOrders() ([]models.Order, error) {
 	var orders []models.Order
 
+	// Unscoped() inside each Preload callback ensures soft-deleted related
+	// records (Customer / Shoe / Employee) still appear on historical orders.
+	unscopedFn := func(db *gorm.DB) *gorm.DB { return db.Unscoped() }
+
 	if err := r.DB.
-		Preload("Customer").
-		Preload("Shoe").
-		Preload("Employee").
+		Preload("Customer", unscopedFn).
+		Preload("Shoe", unscopedFn).
+		Preload("Employee", unscopedFn).
 		Order("o_id desc").
 		Find(&orders).Error; err != nil {
 		return nil, err
@@ -99,11 +103,13 @@ func (r *OrderRepo) GetAllOrders() ([]models.Order, error) {
 func (r *OrderRepo) GetOrderByID(id uint) (models.Order, error) {
 	var order models.Order
 
+	unscopedFn := func(db *gorm.DB) *gorm.DB { return db.Unscoped() }
+
 	err := r.DB.
-		Preload("Customer").
-		Preload("Shoe").
-		Preload("Shoe.Supplier").
-		Preload("Employee").
+		Preload("Customer", unscopedFn).
+		Preload("Shoe", unscopedFn).
+		Preload("Shoe.Supplier", unscopedFn).
+		Preload("Employee", unscopedFn).
 		First(&order, id).Error
 
 	return order, err

@@ -16,10 +16,11 @@ type Order struct {
 	Status     string    `json:"status"`      // PAID, DEBT, PARTIAL
 	OrderDate  time.Time `gorm:"type:timestamp;default:CURRENT_TIMESTAMP" json:"order_date"`
 
-	// Relations
-	Customer Customer `gorm:"foreignKey:CusID;references:ID" json:"customer,omitempty"`
-	Shoe     Shoe     `gorm:"foreignKey:ShoeID;references:ID" json:"shoe,omitempty"`
-	Employee Employee `gorm:"foreignKey:EmpID;references:ID" json:"employee,omitempty"`
+	// Relations — pointer types so omitempty only drops nil (unloaded) relations,
+	// not zero-value structs. GORM Preload sets these to non-nil pointers.
+	Customer *Customer `gorm:"foreignKey:CusID;references:ID" json:"customer,omitempty"`
+	Shoe     *Shoe     `gorm:"foreignKey:ShoeID;references:ID" json:"shoe,omitempty"`
+	Employee *Employee `gorm:"foreignKey:EmpID;references:ID" json:"employee,omitempty"`
 
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
