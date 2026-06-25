@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Receipt, Search, ShoppingCart, X } from 'lucide-react';
+import { Plus, Receipt, Search, ShoppingCart, X, Printer } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import useAuthStore from '../context/authStore';
 
@@ -323,6 +323,7 @@ const Orders: React.FC = () => {
                 <th className="px-6 py-4">Qiimaha Guud</th>
                 <th className="px-6 py-4">Xaalada</th>
                 <th className="px-6 py-4">Taariikhda</th>
+                <th className="px-6 py-4 text-right">Ficilada</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -337,7 +338,7 @@ const Orders: React.FC = () => {
                 </tr>
               ) : filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-slate-500 font-bold bg-slate-50/50">
+                  <td colSpan={9} className="px-6 py-12 text-center text-slate-500 font-bold bg-slate-50/50">
                     Wax dalab ah lagama helin nidaamka.
                   </td>
                 </tr>
@@ -420,6 +421,17 @@ const Orders: React.FC = () => {
                         {order.order_date
                           ? new Date(order.order_date).toLocaleString('en-GB')
                           : '-'}
+                      </td>
+
+                      {/* Ficilada */}
+                      <td className="px-6 py-4 text-right">
+                        <Link
+                          to={`/invoice/${order.o_id}`}
+                          className="inline-flex items-center justify-center p-2 text-slate-400 hover:text-garden-dark hover:bg-garden-lime/20 rounded-lg transition-colors"
+                          title="View / Print Invoice"
+                        >
+                          <Printer className="w-5 h-5" />
+                        </Link>
                       </td>
 
                     </tr>

@@ -20,7 +20,7 @@ const MENU_ITEMS = [
   { name: 'Customers', path: '/customers', icon: Users, roles: ['ADMIN', 'STAFF'] },
   { name: 'Employees', path: '/employees', icon: Briefcase, roles: ['ADMIN'] },
   { name: 'Orders', path: '/orders', icon: ShoppingCart, roles: ['ADMIN', 'STAFF', 'CASHIER'] },
-  { name: 'Payments', path: '/payments', icon: CreditCard, roles: ['ADMIN', 'STAFF'] },
+  { name: 'Payments', path: '/payments', icon: CreditCard, roles: ['ADMIN', 'STAFF', 'CASHIER'] },
   { name: 'Reports', path: '/reports', icon: BarChart3, roles: ['ADMIN'] },
 ];
 

@@ -19,6 +19,6 @@ func (r *PaymentRepo) CreatePayment(payment *models.Payment) error {
 
 func (r *PaymentRepo) GetAllPayments() ([]models.Payment, error) {
 	var payments []models.Payment
-	err := r.DB.Preload("Customer").Preload("Shoe").Find(&payments).Error
+	err := r.DB.Preload("Order").Preload("Order.Customer").Preload("Customer").Preload("Shoe").Find(&payments).Error
 	return payments, err
 }

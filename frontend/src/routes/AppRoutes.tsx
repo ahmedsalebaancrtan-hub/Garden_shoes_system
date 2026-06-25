@@ -13,6 +13,9 @@ import Shoes from '../pages/Shoes';
 import Customers from '../pages/Customers';
 import Employees from '../pages/Employees';
 import Login from '../pages/login';
+import Payments from '../pages/Payments';
+import Reports from '../pages/Reports';
+import InvoiceReport from '../pages/InvoiceReport';
 
 // Dummy component for pages we haven't built yet
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -45,6 +48,8 @@ const AppRoutes: React.FC = () => {
           <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'STAFF', 'CASHIER']} />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/orders" element={<Orders />} />
+            <Route path="/payments" element={<Payments />} />
+            <Route path="/invoice/:id" element={<InvoiceReport />} />
           </Route>
 
           {/* Admin, Staff */}
@@ -52,13 +57,12 @@ const AppRoutes: React.FC = () => {
             <Route path="/shoes" element={<Shoes />} />
             <Route path="/suppliers" element={<Suppliers />} />
             <Route path="/customers" element={<Customers />} />
-            <Route path="/payments" element={<PlaceholderPage title="Payments" />} />
           </Route>
 
           {/* Admin Only */}
           <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
             <Route path="/employees" element={<Employees />} />
-            <Route path="/reports" element={<PlaceholderPage title="Reports" />} />
+            <Route path="/reports" element={<Reports />} />
           </Route>
 
         </Route>

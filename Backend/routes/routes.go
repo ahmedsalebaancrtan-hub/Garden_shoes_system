@@ -19,7 +19,7 @@ func RegisterRoute(r *gin.Engine) {
 	ReportHandler := handlers.RegisterReportHandler()
 	UserGroup := ApiGroup.Group("/users")
 	{
-		UserGroup.POST("/create", UserHandler.CreateUser)
+		UserGroup.POST("/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), UserHandler.CreateUser)
 		UserGroup.POST("/login", UserHandler.LoginUser)
 		UserGroup.GET("/whoami", middleware.Authenticated(), UserHandler.WhoAmI)
 
@@ -34,7 +34,7 @@ func RegisterRoute(r *gin.Engine) {
 	ShoeGroup := ApiGroup.Group("/shoes")
 	{
 		ShoeGroup.POST("/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), ShoeHandler.CreateShoe)
-		ShoeGroup.GET("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), ShoeHandler.GetShoes)
+		ShoeGroup.GET("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF", "CASHIER"), ShoeHandler.GetShoes)
 		ShoeGroup.PUT("/update/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), ShoeHandler.UpdateShoe)
 		ShoeGroup.DELETE("/delete/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), ShoeHandler.DeleteShoe)
 		ShoeGroup.GET("/low-stock", middleware.Authenticated(), ShoeHandler.LowStockAlert)
@@ -42,27 +42,28 @@ func RegisterRoute(r *gin.Engine) {
 	}
 	CustomerGroup := ApiGroup.Group("/customers")
 	{
-		CustomerGroup.POST("/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), CustomerHandler.CreateCustomer)
-		CustomerGroup.GET("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), CustomerHandler.GetCustomers)
+		CustomerGroup.POST("/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF", "CASHIER"), CustomerHandler.CreateCustomer)
+		CustomerGroup.GET("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF", "CASHIER"), CustomerHandler.GetCustomers)
 		CustomerGroup.PUT("/update/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), CustomerHandler.UpdateCustomer)
 		CustomerGroup.DELETE("/delete/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), CustomerHandler.DeleteCustomer)
 	}
 	EmployeeGroup := ApiGroup.Group("/employees")
 	{
 		EmployeeGroup.POST("/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), EmployeeHandler.CreateEmployee)
-		EmployeeGroup.GET("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), EmployeeHandler.GetEmployees)
+		EmployeeGroup.GET("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF", "CASHIER"), EmployeeHandler.GetEmployees)
 		EmployeeGroup.PUT("/update/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), EmployeeHandler.UpdateEmployee)
 		EmployeeGroup.DELETE("/delete/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), EmployeeHandler.DeleteEmployee)
 	}
 	SalesProtected := ApiGroup.Group("/orders")
 	{
-		SalesProtected.POST("/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "CASHIER"), OrderHandler.CreateOrder)
-		SalesProtected.GET("/", middleware.Authenticated(), middleware.RoleRequired("STAFF", "ADMIN"), OrderHandler.GetAllOrders)
-		SalesProtected.GET("/:id", middleware.Authenticated(), middleware.RoleRequired("STAFF", "ADMIN"), OrderHandler.GetOrderByID)
+		SalesProtected.POST("/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "CASHIER", "STAFF"), OrderHandler.CreateOrder)
+		SalesProtected.GET("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF", "CASHIER"), OrderHandler.GetAllOrders)
+		SalesProtected.GET("/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF", "CASHIER"), OrderHandler.GetOrderByID)
 	}
 	PaymentGroup := ApiGroup.Group("/payments")
 	{
-		PaymentGroup.POST("/create", middleware.Authenticated(), middleware.RoleRequired("STAFF", "ADMIN"), PaymentHandler.ProcessPayment)
+		PaymentGroup.GET("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF", "CASHIER"), PaymentHandler.GetAllPayments)
+		PaymentGroup.POST("/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF", "CASHIER"), PaymentHandler.ProcessPayment)
 	}
 	ReportGroup := ApiGroup.Group("/reports")
 	{
