@@ -12,6 +12,7 @@ func RoleRequired(allowedRoles ...string) gin.HandlerFunc {
 		// 1. Ka soo saar role-ka user-ka ee uu middleware-ka Authenticated() dhex dhigay Context-ka
 		userRole, exists := c.Get("role")
 		if !exists {
+			ApplyCORSHeaders(c)
 			c.JSON(http.StatusForbidden, gin.H{
 				"is_success": false,
 				"message":    "Ma haysatid oggolaansho aad ku booqato qaybtaan!",
@@ -31,6 +32,7 @@ func RoleRequired(allowedRoles ...string) gin.HandlerFunc {
 
 		// 3. Haddii nambarka role-kiisa la waayo, albaabka ka xir
 		if !isAllowed {
+			ApplyCORSHeaders(c)
 			c.JSON(http.StatusForbidden, gin.H{
 				"is_success": false,
 				"message":    "Ma haysatid oggolaansho aad ku booqato qaybtaan!",

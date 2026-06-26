@@ -36,6 +36,7 @@ func ConnectDb() {
 		&models.Shoe{},
 		&models.Order{},
 		&models.Payment{},
+		&models.Salary{},
 	)
 	if err != nil {
 		log.Fatal("Migration failed: ", err)

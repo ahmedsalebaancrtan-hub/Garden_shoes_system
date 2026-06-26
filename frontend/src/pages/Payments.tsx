@@ -16,6 +16,7 @@ export interface Payment {
   order?: {
     o_id: number;
     total_price: number;
+    discount?: number;   // discount applied on the original order
     status: string;
     customer?: {
       cus_id?: number;
@@ -124,7 +125,13 @@ const Payments: React.FC = () => {
     const totalPaidForOrder = payments
       .filter((p) => p.order_id === order.o_id)
       .reduce((sum, p) => sum + toNumber(p.amount_paid), 0);
-    return toNumber(order.total_price) - totalPaidForOrder;
+    // Deduct discount before computing what is still owed
+    return toNumber(order.total_price) - toNumber(order.discount) - totalPaidForOrder;
+  };
+
+  // Net debt due after discount (used for modal cap + display)
+  const netDebtDue = (order: Order): number => {
+    return toNumber(order.total_price) - toNumber(order.discount);
   };
 
   const totalCollected = useMemo(
@@ -152,30 +159,72 @@ const Payments: React.FC = () => {
   };
 
   // ── Process Debt Payment ──────────────────────────────────────────────────
+  //
+  // VALIDATION RULES (strict — no shorthand):
+  //   1. An order must be selected.
+  //   2. The entered amount must be a positive number.
+  //   3. OVERPAYMENT GUARD:
+  //      netDue = order.total_price - order.discount - order.total_amount_paid_so_far
+  //      where `total_amount_paid_so_far` is the sum of every previous payment
+  //      recorded in the local `payments` array for this order.
+  //      If amount_paid > netDue  →  BLOCK immediately with the required message.
+  //   4. STATUS RULE (enforced by backend, mirrored here for clarity):
+  //      Only set to 'PAID' when amount_paid >= netDue (i.e. debt is fully settled).
+  //      Any partial payment leaves the order in 'PARTIAL' / 'DEBT' status.
   const handleProcessPayment = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // ── Guard 1: Order must be selected ─────────────────────────────────────
     if (!selectedOrderId) {
       showToast('error', 'Fadlan dooro dalabka deynta (Order)');
       return;
     }
-    if (!amountPaid || Number(amountPaid) <= 0) {
+
+    // ── Guard 2: Amount must be a positive number ────────────────────────────
+    const enteredAmount: number = Number(amountPaid);
+    if (!amountPaid || enteredAmount <= 0) {
       showToast('error', 'Fadlan geli qadar lacageed oo sax ah');
       return;
     }
+
+    // ── Guard 3: Strict Overpayment Check ───────────────────────────────────
+    //
+    //   Step A — Derive each component explicitly (no shorthand):
     if (selectedOrderDetails) {
-      const remaining = calculateRemainingDebt(selectedOrderDetails);
-      if (Number(amountPaid) > remaining) {
-        showToast('error', `Lacagta aad keentay way ka badantahay deynta hartay ($${remaining.toFixed(2)})`);
+      const orderTotalPrice: number = toNumber(selectedOrderDetails.total_price);
+      const orderDiscount: number = toNumber(selectedOrderDetails.discount);
+
+      //   Step B — Compute total_amount_paid_so_far by summing every payment
+      //             that has already been recorded for this specific order.
+      const totalAmountPaidSoFar: number = payments
+        .filter((p) => p.order_id === selectedOrderDetails.o_id)
+        .reduce((runningSum, p) => runningSum + toNumber(p.amount_paid), 0);
+
+      //   Step C — Calculate the strict net amount still due for this order.
+      //             Formula (from requirements):
+      //             netDue = total_price - discount - total_amount_paid_so_far
+      const netDue: number = orderTotalPrice - orderDiscount - totalAmountPaidSoFar;
+
+      //   Step D — BLOCK if the entered amount EXCEEDS the net due.
+      //             Using a tiny epsilon (0.001) to guard against IEEE-754
+      //             floating-point rounding noise (e.g. 50.000000001 vs 50.00).
+      const FLOAT_EPSILON: number = 0.001;
+      if (enteredAmount > netDue + FLOAT_EPSILON) {
+        // ── Exact required error message (Somali) ──────────────────────────
+        showToast(
+          'error',
+          `Cilad: Ma bixin kartid lacag ka badan deynta dhabta ah ee u sarraysa dalabkan ($${netDue.toFixed(2)})!`,
+        );
         return;
       }
     }
 
+    // ── Submit: all guards passed ────────────────────────────────────────────
     setSubmitting(true);
     try {
       const payload = {
         order_id: Number(selectedOrderId),
-        amount_paid: Number(amountPaid),
+        amount_paid: enteredAmount,
         payment_method: paymentMethod,
       };
 
@@ -308,6 +357,7 @@ const Payments: React.FC = () => {
                 <th className="px-6 py-4">Order ID</th>
                 <th className="px-6 py-4">Macaamiilka</th>
                 <th className="px-6 py-4">Lacagta (Amount)</th>
+                <th className="px-6 py-4">Qiimo Dhimis</th>
                 <th className="px-6 py-4">Habka Bixinta</th>
                 <th className="px-6 py-4">Taariikhda</th>
               </tr>
@@ -315,7 +365,7 @@ const Payments: React.FC = () => {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">
+                  <td colSpan={7} className="px-6 py-12 text-center">
                     <div className="flex justify-center items-center space-x-2">
                       <div className="w-6 h-6 border-2 border-garden-dark border-t-transparent rounded-full animate-spin" />
                       <span className="text-slate-500 font-bold">Xogta baa soo socota...</span>
@@ -324,7 +374,7 @@ const Payments: React.FC = () => {
                 </tr>
               ) : filteredPayments.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500 font-bold bg-slate-50/50">
+                  <td colSpan={7} className="px-6 py-12 text-center text-slate-500 font-bold bg-slate-50/50">
                     Wax lacag-bixin ah lagama helin nidaamka.
                   </td>
                 </tr>
@@ -340,6 +390,16 @@ const Payments: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 font-black text-garden-dark text-base">
                         ${toNumber(payment.amount_paid).toFixed(2)}
+                      </td>
+                      {/* Discount column — sourced from the nested order object */}
+                      <td className="px-6 py-4">
+                        {toNumber(payment.order?.discount) > 0 ? (
+                          <span className="font-bold text-amber-600">
+                            -${toNumber(payment.order?.discount).toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="text-slate-300 font-medium">—</span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
@@ -417,29 +477,49 @@ const Payments: React.FC = () => {
                 )}
               </div>
 
-              {/* Order Summary Card */}
-              {selectedOrderDetails && (
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-slate-500 font-bold">Wadarta Dalabka</p>
-                    <p className="text-sm font-black text-slate-800">
-                      ${toNumber(selectedOrderDetails.total_price).toFixed(2)}
-                    </p>
+              {/* Order Summary Card — 3-row discount breakdown */}
+              {selectedOrderDetails && (() => {
+                const orderDiscount = toNumber(selectedOrderDetails.discount);
+                const net = netDebtDue(selectedOrderDetails);
+                const remaining = calculateRemainingDebt(selectedOrderDetails);
+                return (
+                  <div className="rounded-xl border border-slate-200 overflow-hidden text-sm">
+                    {/* Row 1 — Original total */}
+                    <div className="flex justify-between items-center px-4 py-3 bg-slate-50">
+                      <span className="text-slate-500 font-bold">Wadarta Asaliga ah (Original Total)</span>
+                      <span className="font-black text-slate-800">
+                        ${toNumber(selectedOrderDetails.total_price).toFixed(2)}
+                      </span>
+                    </div>
+                    {/* Row 2 — Discount (only shown when > 0) */}
+                    {orderDiscount > 0 && (
+                      <div className="flex justify-between items-center px-4 py-3 bg-amber-50 border-t border-amber-100">
+                        <span className="text-amber-700 font-bold">Qiimo Dhimis (Discount Made)</span>
+                        <span className="font-black text-amber-600">- ${orderDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {/* Row 3 — Net debt due */}
+                    <div className="flex justify-between items-center px-4 py-3 bg-white border-t border-slate-200">
+                      <span className="text-slate-600 font-bold">Deynta Dhabta Ah (Net Debt Due)</span>
+                      <span className="font-black text-slate-700">${net.toFixed(2)}</span>
+                    </div>
+                    {/* Row 4 — Remaining after existing payments */}
+                    <div className="flex justify-between items-center px-4 py-3 bg-red-50 border-t border-red-100">
+                      <span className="text-red-700 font-bold">Wali La Bixin Waayey (Still Owed)</span>
+                      <span className="font-black text-red-600">${remaining.toFixed(2)}</span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-slate-500 font-bold">Deynta Hartay</p>
-                    <p className="text-sm font-black text-red-600">
-                      ${calculateRemainingDebt(selectedOrderDetails).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Amount Input */}
               <div>
                 <label className="block text-sm font-extrabold text-slate-700 mb-1.5">
                   Lacagta La Bixinayo ($) *
                 </label>
+                {/* The `max` attribute below is capped at netDue (total_price - discount - totalPaidSoFar)
+                    so the browser's native number-spinner also prevents exceeding the remaining amount.
+                    This mirrors the exact formula enforced in handleProcessPayment Guard 3. */}
                 <input
                   type="number"
                   min="0.01"
@@ -457,6 +537,22 @@ const Payments: React.FC = () => {
                   placeholder="Tusaale: 50.00"
                   required
                 />
+                {/* Inline cap hint — shown only when an order is selected */}
+                {selectedOrderDetails && (() => {
+                  const orderTotalPrice: number = toNumber(selectedOrderDetails.total_price);
+                  const orderDiscount: number = toNumber(selectedOrderDetails.discount);
+                  const totalAmountPaidSoFar: number = payments
+                    .filter((p) => p.order_id === selectedOrderDetails.o_id)
+                    .reduce((runningSum, p) => runningSum + toNumber(p.amount_paid), 0);
+                  const netDue: number = orderTotalPrice - orderDiscount - totalAmountPaidSoFar;
+                  return (
+                    <p className="text-xs text-slate-500 mt-1.5 font-semibold">
+                      Xadka ugu sareeya:{' '}
+                      <span className="font-black text-red-600">${netDue.toFixed(2)}</span>
+                      {' '}(total − discount − horey la bixiyey)
+                    </p>
+                  );
+                })()}
               </div>
 
               {/* Payment Method */}

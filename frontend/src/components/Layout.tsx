@@ -10,6 +10,7 @@ import {
   ShoppingCart,
   CreditCard,
   BarChart3,
+  DollarSign,
   LogOut
 } from 'lucide-react';
 
@@ -18,7 +19,9 @@ const MENU_ITEMS = [
   { name: 'Shoes', path: '/shoes', icon: Footprints, roles: ['ADMIN', 'STAFF'] },
   { name: 'Suppliers', path: '/suppliers', icon: Truck, roles: ['ADMIN', 'STAFF'] },
   { name: 'Customers', path: '/customers', icon: Users, roles: ['ADMIN', 'STAFF'] },
+  { name: 'Users', path: '/users', icon: Users, roles: ['ADMIN'] },
   { name: 'Employees', path: '/employees', icon: Briefcase, roles: ['ADMIN'] },
+  { name: 'Salaries', path: '/salaries', icon: DollarSign, roles: ['ADMIN', 'STAFF'] },
   { name: 'Orders', path: '/orders', icon: ShoppingCart, roles: ['ADMIN', 'STAFF', 'CASHIER'] },
   { name: 'Payments', path: '/payments', icon: CreditCard, roles: ['ADMIN', 'STAFF', 'CASHIER'] },
   { name: 'Reports', path: '/reports', icon: BarChart3, roles: ['ADMIN'] },

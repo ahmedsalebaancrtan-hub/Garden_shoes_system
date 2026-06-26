@@ -26,6 +26,7 @@ func Authenticated() gin.HandlerFunc {
 
 		// 1. Check header exists
 		if authHeader == "" {
+			ApplyCORSHeaders(c)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"message":    "Missing Authorization header",
 				"is_success": false,
@@ -35,6 +36,7 @@ func Authenticated() gin.HandlerFunc {
 
 		// 2. Check Bearer format
 		if !strings.HasPrefix(authHeader, "Bearer ") {
+			ApplyCORSHeaders(c)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"message":    "Invalid Authentication header format",
 				"is_success": false,
@@ -54,6 +56,7 @@ func Authenticated() gin.HandlerFunc {
 
 		// 5. Validate token
 		if err != nil || !token.Valid {
+			ApplyCORSHeaders(c)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"message":    "Unauthenticated",
 				"is_success": false,
@@ -64,6 +67,7 @@ func Authenticated() gin.HandlerFunc {
 		// 6. Extract claims
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
+			ApplyCORSHeaders(c)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"message":    "Invalid token claims",
 				"is_success": false,
@@ -82,6 +86,7 @@ func Authenticated() gin.HandlerFunc {
 		}
 
 		if !idExists || rawID == nil {
+			ApplyCORSHeaders(c)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"message":    "invalid user id: claim missing from token",
 				"is_success": false,
@@ -101,6 +106,7 @@ func Authenticated() gin.HandlerFunc {
 		case uint:
 			userID = v
 		default:
+			ApplyCORSHeaders(c)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"message":    "invalid user id: unexpected data format type",
 				"is_success": false,
@@ -128,6 +134,7 @@ func RefreshAuthenticated() gin.HandlerFunc {
 
 		// 1. Check header
 		if authHeader == "" {
+			ApplyCORSHeaders(c)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"message":    "Missing Authorization header",
 				"is_success": false,
@@ -137,6 +144,7 @@ func RefreshAuthenticated() gin.HandlerFunc {
 
 		// 2. Check Bearer format
 		if !strings.HasPrefix(authHeader, "Bearer ") {
+			ApplyCORSHeaders(c)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"message":    "Invalid Authorization header format",
 				"is_success": false,
@@ -160,6 +168,7 @@ func RefreshAuthenticated() gin.HandlerFunc {
 
 		// 5. Validate token
 		if err != nil || !token.Valid {
+			ApplyCORSHeaders(c)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"message":    "Unauthorized access",
 				"is_success": false,
@@ -169,6 +178,7 @@ func RefreshAuthenticated() gin.HandlerFunc {
 
 		// 6. (IMPORTANT) Check expiration manually
 		if claims.ExpiresAt < time.Now().Unix() {
+			ApplyCORSHeaders(c)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"message":    "Refresh token expired",
 				"is_success": false,

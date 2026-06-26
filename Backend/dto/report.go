@@ -36,6 +36,7 @@ type SingleInvoiceResponse struct {
 	ShoeBrand       string  `json:"shoe_brand"`
 	Qty             int     `json:"qty"`
 	UnitPrice       float64 `json:"unit_price"`
+	Discount        float64 `json:"discount"`         // Dhimista (discount)
 	TotalPrice      float64 `json:"total_price"`
 	TotalAmountPaid float64 `json:"total_amount_paid"`
 	RemainingDebt   float64 `json:"remaining_debt"`

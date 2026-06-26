@@ -62,8 +62,9 @@ func (svc *ReportService) GetCustomerMonthlyReport(cusID uint, year int, month i
 			Where("order_id = ?", o.ID).
 			Select("COALESCE(SUM(amount_paid), 0)").Scan(&paidForThisOrder)
 
-		remainingDebt := o.TotalPrice - paidForThisOrder
-		totalBought += o.TotalPrice
+		// Natiijada saxda ah: total_price - discount - lacagii laga bixiyey
+		remainingDebt := o.TotalPrice - o.Discount - paidForThisOrder
+		totalBought += o.TotalPrice - o.Discount  // sum of discounted totals
 		totalPaid += paidForThisOrder
 
 		history = append(history, dto.OrderReceiptResponse{
@@ -71,7 +72,7 @@ func (svc *ReportService) GetCustomerMonthlyReport(cusID uint, year int, month i
 			CustomerName:  o.Customer.CusName,
 			ShoeName:      o.Shoe.ShoeName,
 			Qty:           o.Qty,
-			TotalPrice:    o.TotalPrice,
+			TotalPrice:    o.TotalPrice - o.Discount, // discounted total
 			AmountPaid:    paidForThisOrder,
 			RemainingDebt: remainingDebt,
 			Status:        o.Status,
@@ -102,16 +103,17 @@ func (svc *ReportService) GetSingleInvoice(orderID uint) (*dto.SingleInvoiceResp
 		Where("order_id = ?", order.ID).
 		Select("COALESCE(SUM(amount_paid), 0)").Scan(&totalAmountPaid)
 
-	remainingDebt := order.TotalPrice - totalAmountPaid
+	remainingDebt := order.TotalPrice - order.Discount - totalAmountPaid
 
 	invoice := &dto.SingleInvoiceResponse{
 		OrderID:         order.ID,
 		CustomerName:    order.Customer.CusName,
-		CustomerPhone:   order.Customer.CusPhone, // Hubi inuu tiirkani jiro moodalkaaga customer-ka
+		CustomerPhone:   order.Customer.CusPhone,
 		ShoeName:        order.Shoe.ShoeName,
 		ShoeBrand:       order.Shoe.ShoeBrand,
 		Qty:             order.Qty,
 		UnitPrice:       order.Shoe.Price,
+		Discount:        order.Discount,
 		TotalPrice:      order.TotalPrice,
 		TotalAmountPaid: totalAmountPaid,
 		RemainingDebt:   remainingDebt,

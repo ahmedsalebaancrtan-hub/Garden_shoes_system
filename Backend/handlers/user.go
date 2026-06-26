@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	dtos "github.com/gardenshoes/ahmed/dto"
 	"github.com/gardenshoes/ahmed/infra"
@@ -32,6 +33,51 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		return
 	}
 	c.JSON(status, gin.H{"is_success": true, "message": "User Created successfully"})
+}
+
+func (h *UserHandler) GetUsers(c *gin.Context) {
+	users, status, err := h.Usersvc.GetUsers()
+	if err != nil {
+		c.JSON(status, gin.H{"message": err.Error(), "is_success": false})
+		return
+	}
+	c.JSON(status, gin.H{"is_success": true, "data": users})
+}
+
+func (h *UserHandler) UpdateUser(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user id", "is_success": false})
+		return
+	}
+
+	var body dtos.UpdateUserRequest
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid body", "error": err.Error(), "is_success": false})
+		return
+	}
+
+	user, status, err := h.Usersvc.UpdateUser(uint(id), &body)
+	if err != nil {
+		c.JSON(status, gin.H{"message": err.Error(), "is_success": false})
+		return
+	}
+	c.JSON(status, gin.H{"is_success": true, "message": "User updated successfully", "data": user})
+}
+
+func (h *UserHandler) DeleteUser(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user id", "is_success": false})
+		return
+	}
+
+	status, err := h.Usersvc.DeleteUser(uint(id))
+	if err != nil {
+		c.JSON(status, gin.H{"message": err.Error(), "is_success": false})
+		return
+	}
+	c.JSON(status, gin.H{"is_success": true, "message": "User deleted successfully"})
 }
 
 func (h *UserHandler) LoginUser(c *gin.Context) {

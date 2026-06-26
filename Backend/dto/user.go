@@ -3,15 +3,39 @@ package dto
 import "github.com/gardenshoes/ahmed/models"
 
 type RegisterRequest struct {
-	FullName string      `json:"fullname" binding:"required,min=3,max=100"`
-	Phone    string      `json:"phone" binding:"required,min=7,max=20"`
-	Email    string      `json:"email" binding:"required,email"`
-	Password string      `json:"password" binding:"required,min=6"`
-	Role     models.Role `json:"role" binding:"required,oneof=ADMIN CASHIER STAFF"`
+	Username string            `json:"username"`
+	FullName string            `json:"fullname"`
+	Phone    string            `json:"phone"`
+	Email    string            `json:"email"`
+	Password string            `json:"password"`
+	Role     models.Role       `json:"role"`
+	Status   models.UserStatus `json:"status"`
 }
 type CreateLogindto struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=8,max=128"`
+}
+
+type UpdateUserRequest struct {
+	Username string            `json:"username"`
+	FullName string            `json:"fullname"`
+	Email    string            `json:"email"`
+	Phone    string            `json:"phone"`
+	Role     models.Role       `json:"role"`
+	Status   models.UserStatus `json:"status"`
+	Password string            `json:"password"`
+}
+
+type UserResponse struct {
+	ID        uint              `json:"id"`
+	Username  string            `json:"username"`
+	FullName  string            `json:"fullname"`
+	Phone     string            `json:"phone"`
+	Email     string            `json:"email"`
+	Role      models.Role       `json:"role"`
+	Status    models.UserStatus `json:"status"`
+	CreatedAt string            `json:"created_at"`
+	UpdatedAt string            `json:"updated_at"`
 }
 
 type WhoAmIResponse struct {

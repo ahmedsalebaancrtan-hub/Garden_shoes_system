@@ -12,8 +12,9 @@ type Order struct {
 	ShoeID     uint      `gorm:"not null;column:shoe_id" json:"shoe_id"`
 	EmpID      uint      `gorm:"not null;column:emp_id" json:"emp_id"`
 	Qty        int       `gorm:"type:int;not null" json:"qty"`
-	TotalPrice float64   `json:"total_price"` // Qiimaha guud (e.g., $111.00)
-	Status     string    `json:"status"`      // PAID, DEBT, PARTIAL
+	TotalPrice float64   `json:"total_price"`                      // Qiimaha guud (e.g., $111.00)
+	Discount   float64   `json:"discount" gorm:"default:0.00"`     // Dhimista (discount)
+	Status     string    `json:"status"`                           // PAID, DEBT, PARTIAL
 	OrderDate  time.Time `gorm:"type:timestamp;default:CURRENT_TIMESTAMP" json:"order_date"`
 
 	// Relations — pointer types so omitempty only drops nil (unloaded) relations,

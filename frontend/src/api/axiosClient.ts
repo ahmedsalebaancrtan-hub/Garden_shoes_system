@@ -1,8 +1,17 @@
 // src/api/axiosClient.ts
 import axios, { type InternalAxiosRequestConfig } from 'axios';
 
+const clearSessionAndRedirect = () => {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+
+  if (!window.location.hash.includes('/login')) {
+    window.location.hash = '/login';
+  }
+};
+
 const axiosClient = axios.create({
-  baseURL: 'http://localhost:8000/api', // Port-ka rasmiga ah ee Backend-kaaga
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -19,6 +28,16 @@ axiosClient.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+axiosClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      clearSessionAndRedirect();
+    }
     return Promise.reject(error);
   }
 );

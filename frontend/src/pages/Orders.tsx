@@ -38,6 +38,7 @@ export interface Order {
   emp_id?: number;             // json:"emp_id"
   qty: number;                 // json:"qty"
   total_price?: number;        // json:"total_price"
+  discount?: number;           // json:"discount"
   status?: string;             // json:"status"
   order_date: string;          // json:"order_date"
   // Preloaded relations — omitempty means these may be absent
@@ -99,9 +100,42 @@ const Orders: React.FC = () => {
   const [quantity, setQuantity] = useState<number>(1);
   const [amountPaid, setAmountPaid] = useState<number | ''>('');
   const [paymentMethod, setPaymentMethod] = useState('CASH');
+  const [discount, setDiscount] = useState<number>(0);
+
+  const [customerQuery, setCustomerQuery] = useState('');
+  const [shoeQuery, setShoeQuery] = useState('');
+  const [employeeQuery, setEmployeeQuery] = useState('');
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [showShoeDropdown, setShowShoeDropdown] = useState(false);
+  const [showEmployeeDropdown, setShowEmployeeDropdown] = useState(false);
 
   const [toastMsg, setToastMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [orderSearch, setOrderSearch] = useState('');
+
+  const filteredCustomers = useMemo(() => {
+    return customers.filter(c => 
+      c.cus_name.toLowerCase().includes(customerQuery.toLowerCase()) || 
+      (c.cus_phone && c.cus_phone.includes(customerQuery))
+    );
+  }, [customers, customerQuery]);
+
+  const filteredShoes = useMemo(() => {
+    return shoes.filter((shoe) => {
+      if ((shoe.qty || 0) <= 0) return false;
+      return (
+        shoe.shoe_name.toLowerCase().includes(shoeQuery.toLowerCase()) || 
+        shoe.shoe_brand.toLowerCase().includes(shoeQuery.toLowerCase()) ||
+        String(shoe.shoe_id).includes(shoeQuery)
+      );
+    });
+  }, [shoes, shoeQuery]);
+
+  const filteredEmployees = useMemo(() => {
+    return employees.filter(e => 
+      e.emp_name.toLowerCase().includes(employeeQuery.toLowerCase()) || 
+      (e.job_title && e.job_title.toLowerCase().includes(employeeQuery.toLowerCase()))
+    );
+  }, [employees, employeeQuery]);
 
   const showToast = (type: 'success' | 'error', text: string) => {
     setToastMsg({ type, text });
@@ -156,9 +190,17 @@ const Orders: React.FC = () => {
   const resetPOS = () => {
     setSelectedCustomerId('');
     setSelectedShoeId('');
+    setSelectedEmployeeId('');
+    setCustomerQuery('');
+    setShoeQuery('');
+    setEmployeeQuery('');
+    setShowCustomerDropdown(false);
+    setShowShoeDropdown(false);
+    setShowEmployeeDropdown(false);
     setQuantity(1);
     setAmountPaid('');
     setPaymentMethod('CASH');
+    setDiscount(0);
   };
 
   const selectedShoe = useMemo(
@@ -166,9 +208,14 @@ const Orders: React.FC = () => {
     [selectedShoeId, shoes],
   );
 
-  const estimatedTotal = useMemo(
+  const subtotal = useMemo(
     () => toNumber(selectedShoe?.price) * quantity,
     [selectedShoe, quantity],
+  );
+
+  const estimatedTotal = useMemo(
+    () => Math.max(0, subtotal - discount),
+    [subtotal, discount],
   );
 
   const handleCheckout = async (event: React.FormEvent) => {
@@ -199,6 +246,30 @@ const Orders: React.FC = () => {
       return;
     }
 
+    // ── OVERPAYMENT GUARD ────────────────────────────────────────────────────
+    // ACCOUNTING RULE: The cash advance entered at checkout must never exceed
+    // the net invoice total (subtotal minus any discount applied).
+    //
+    // Formula (strict — no shorthand):
+    //   netTotalDue = subtotal - discount
+    //   where subtotal = selectedShoe.price * quantity
+    //
+    // This guard runs ONLY for non-debt payment methods because 'DEYN (DEBT)'
+    // always forces amount_paid to 0 and skips the cash-advance input entirely.
+    if (paymentMethod !== 'DEYN (DEBT)') {
+      const netTotalDue: number = subtotal - discount;
+      const typedCashAdvance: number = amountPaid === '' ? netTotalDue : Number(amountPaid);
+
+      if (typedCashAdvance > netTotalDue) {
+        showToast(
+          'error',
+          `Cilad: Lacagta la bixinayo ($${typedCashAdvance.toFixed(2)}) ma ka badnaan karto wadarta guud ee iibka ka dib dhimista ($${netTotalDue.toFixed(2)})!`,
+        );
+        return;
+      }
+    }
+    // ── END OVERPAYMENT GUARD ────────────────────────────────────────────────
+
     const typedAmountPaid = amountPaid === '' ? estimatedTotal : Number(amountPaid);
     const effectiveAmountPaid =
       paymentMethod === 'DEYN (DEBT)'
@@ -214,6 +285,7 @@ const Orders: React.FC = () => {
         shoe_id: Number(selectedShoeId),
         emp_id: Number(selectedEmployeeId),
         qty: Number(quantity),
+        discount: Number(discount),
         amount_paid: Number(effectiveAmountPaid),
         payment_method: paymentMethod === 'DEYN (DEBT)' ? 'DEYN' : paymentMethod,
       };
@@ -463,63 +535,158 @@ const Orders: React.FC = () => {
             </div>
 
             <form onSubmit={handleCheckout} className="p-6 space-y-5 overflow-y-auto max-h-[80vh]">
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-extrabold text-slate-700 mb-1.5">Macaamiilka (Customer) *</label>
-                <select
-                  value={selectedCustomerId}
-                  onChange={(event) => setSelectedCustomerId(event.target.value === '' ? '' : Number(event.target.value))}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-garden-lime focus:ring-4 focus:ring-garden-lime/20"
-                  required
-                >
-                  <option value="" disabled>
-                    -- Dooro Macaamiil --
-                  </option>
-                  {customers.map((customer) => (
-                    <option key={customer.cus_id} value={customer.cus_id}>
-                      {customer.cus_name} {customer.cus_phone ? `- ${customer.cus_phone}` : ''}
-                    </option>
-                  ))}
-                </select>
+                {selectedCustomerId ? (
+                  <div className="flex items-center justify-between w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold">
+                    <span>
+                      {customers.find(c => c.cus_id === selectedCustomerId)?.cus_name} 
+                      {customers.find(c => c.cus_id === selectedCustomerId)?.cus_phone ? ` - ${customers.find(c => c.cus_id === selectedCustomerId)?.cus_phone}` : ''}
+                    </span>
+                    <button type="button" onClick={() => setSelectedCustomerId('')} className="text-slate-400 hover:text-red-500">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="Raadi magac ama telefoon..."
+                      value={customerQuery}
+                      onChange={(e) => {
+                        setCustomerQuery(e.target.value);
+                        setShowCustomerDropdown(true);
+                      }}
+                      onFocus={() => setShowCustomerDropdown(true)}
+                      onBlur={() => setShowCustomerDropdown(false)}
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-garden-lime focus:ring-4 focus:ring-garden-lime/20"
+                      required={!selectedCustomerId}
+                    />
+                    {showCustomerDropdown && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                        {filteredCustomers.length > 0 ? (
+                          filteredCustomers.map((customer) => (
+                            <div
+                              key={customer.cus_id}
+                              onMouseDown={() => {
+                                setSelectedCustomerId(customer.cus_id);
+                                setCustomerQuery('');
+                                setShowCustomerDropdown(false);
+                              }}
+                              className="px-4 py-2.5 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0 text-sm font-bold text-slate-700"
+                            >
+                              {customer.cus_name} {customer.cus_phone ? `- ${customer.cus_phone}` : ''}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-4 py-3 text-sm text-slate-500 text-center">Lama helin macaamiil</div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-extrabold text-slate-700 mb-1.5">Shaqaalaha (Employee) *</label>
-                <select
-                  value={selectedEmployeeId}
-                  onChange={(event) => setSelectedEmployeeId(event.target.value === '' ? '' : Number(event.target.value))}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-garden-lime focus:ring-4 focus:ring-garden-lime/20"
-                  required
-                >
-                  <option value="" disabled>
-                    -- Dooro Shaqaale --
-                  </option>
-                  {employees.map((employee) => (
-                    <option key={employee.emp_id} value={employee.emp_id}>
-                      {employee.emp_name} - {employee.job_title || 'Cashier'}
-                    </option>
-                  ))}
-                </select>
+                {selectedEmployeeId ? (
+                  <div className="flex items-center justify-between w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold">
+                    <span>
+                      {employees.find(e => e.emp_id === selectedEmployeeId)?.emp_name} - {employees.find(e => e.emp_id === selectedEmployeeId)?.job_title || 'Cashier'}
+                    </span>
+                    <button type="button" onClick={() => setSelectedEmployeeId('')} className="text-slate-400 hover:text-red-500">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="Raadi shaqaale..."
+                      value={employeeQuery}
+                      onChange={(e) => {
+                        setEmployeeQuery(e.target.value);
+                        setShowEmployeeDropdown(true);
+                      }}
+                      onFocus={() => setShowEmployeeDropdown(true)}
+                      onBlur={() => setShowEmployeeDropdown(false)}
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-garden-lime focus:ring-4 focus:ring-garden-lime/20"
+                      required={!selectedEmployeeId}
+                    />
+                    {showEmployeeDropdown && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                        {filteredEmployees.length > 0 ? (
+                          filteredEmployees.map((employee) => (
+                            <div
+                              key={employee.emp_id}
+                              onMouseDown={() => {
+                                setSelectedEmployeeId(employee.emp_id);
+                                setEmployeeQuery('');
+                                setShowEmployeeDropdown(false);
+                              }}
+                              className="px-4 py-2.5 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0 text-sm font-bold text-slate-700"
+                            >
+                              {employee.emp_name} - {employee.job_title || 'Cashier'}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-4 py-3 text-sm text-slate-500 text-center">Lama helin shaqaale</div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-extrabold text-slate-700 mb-1.5">Kabo (Shoe) *</label>
-                <select
-                  value={selectedShoeId}
-                  onChange={(event) => setSelectedShoeId(event.target.value === '' ? '' : Number(event.target.value))}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-garden-lime focus:ring-4 focus:ring-garden-lime/20"
-                  required
-                >
-                  <option value="" disabled>
-                    -- Dooro Kabo --
-                  </option>
-                  {shoes
-                    .filter((shoe) => (shoe.qty || 0) > 0)
-                    .map((shoe) => (
-                      <option key={shoe.shoe_id} value={shoe.shoe_id}>
-                        {shoe.shoe_name} ({shoe.shoe_brand}) - ${toNumber(shoe.price).toFixed(2)} - Stock: {shoe.qty}
-                      </option>
-                    ))}
-                </select>
+                {selectedShoeId ? (
+                  <div className="flex items-center justify-between w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold">
+                    <span>
+                      {selectedShoe?.shoe_name} ({selectedShoe?.shoe_brand}) - ${toNumber(selectedShoe?.price).toFixed(2)}
+                    </span>
+                    <button type="button" onClick={() => setSelectedShoeId('')} className="text-slate-400 hover:text-red-500">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="Raadi magac, brand ama ID..."
+                      value={shoeQuery}
+                      onChange={(e) => {
+                        setShoeQuery(e.target.value);
+                        setShowShoeDropdown(true);
+                      }}
+                      onFocus={() => setShowShoeDropdown(true)}
+                      onBlur={() => setShowShoeDropdown(false)}
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-garden-lime focus:ring-4 focus:ring-garden-lime/20"
+                      required={!selectedShoeId}
+                    />
+                    {showShoeDropdown && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                        {filteredShoes.length > 0 ? (
+                          filteredShoes.map((shoe) => (
+                            <div
+                              key={shoe.shoe_id}
+                              onMouseDown={() => {
+                                setSelectedShoeId(shoe.shoe_id);
+                                setShoeQuery('');
+                                setShowShoeDropdown(false);
+                              }}
+                              className="px-4 py-2.5 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0 text-sm font-bold text-slate-700"
+                            >
+                              {shoe.shoe_name} ({shoe.shoe_brand}) - ${toNumber(shoe.price).toFixed(2)} - Stock: {shoe.qty}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-4 py-3 text-sm text-slate-500 text-center">Lama helin kabo</div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               <div>
@@ -555,21 +722,69 @@ const Orders: React.FC = () => {
                 </select>
               </div>
 
+              {/* ── Discount Input ─────────────────────────────────── */}
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Qiimo Dhimis ($)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={discount}
+                  onChange={(e) => setDiscount(Math.max(0, Number(e.target.value)))}
+                  className="w-full mt-1 p-2 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-garden-lime focus:ring-4 focus:ring-garden-lime/20 bg-slate-50"
+                  placeholder="0.00"
+                />
+              </div>
+
+              {/* ── Order price summary ───────────────────────────── */}
+              {selectedShoe && (
+                <div className="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 space-y-1.5 text-sm">
+                  <div className="flex justify-between text-slate-500 font-medium">
+                    <span>Qiimaha Asalka ({quantity} × ${toNumber(selectedShoe.price).toFixed(2)})</span>
+                    <span>${subtotal.toFixed(2)}</span>
+                  </div>
+                  {discount > 0 && (
+                    <div className="flex justify-between text-red-500 font-bold">
+                      <span>Dhimis</span>
+                      <span>- ${discount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-garden-dark font-black text-base border-t border-slate-200 pt-1.5">
+                    <span>Wadarta</span>
+                    <span>${estimatedTotal.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+
               {paymentMethod !== 'DEYN (DEBT)' && (
                 <div>
                   <label className="block text-sm font-extrabold text-slate-700 mb-1.5">
                     Lacagta La Bixiyey ($)
-                    {selectedShoe && <span className="ml-2 text-garden-dark font-black">(Qiimaha Guud: ${estimatedTotal.toFixed(2)})</span>}
                   </label>
+                  {/*
+                    The `max` attribute is capped at estimatedTotal (subtotal − discount)
+                    so the browser's native number-spinner physically cannot exceed
+                    the net invoice ceiling. The same ceiling is re-enforced
+                    programmatically inside handleCheckout's OVERPAYMENT GUARD.
+                  */}
                   <input
                     type="number"
                     min="0"
                     step="0.01"
+                    max={estimatedTotal > 0 ? estimatedTotal : undefined}
                     value={amountPaid}
                     onChange={(event) => setAmountPaid(event.target.value === '' ? '' : Number(event.target.value))}
                     placeholder={estimatedTotal > 0 ? estimatedTotal.toFixed(2) : '0.00'}
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-garden-lime focus:ring-4 focus:ring-garden-lime/20"
                   />
+                  {/* Live ceiling hint — only shown when a shoe is selected */}
+                  {estimatedTotal > 0 && (
+                    <p className="text-xs text-slate-500 mt-1.5 font-semibold">
+                      Xadka ugu sareeya:{' '}
+                      <span className="font-black text-red-600">${estimatedTotal.toFixed(2)}</span>
+                      {' '}(qiimaha − dhimista)
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -586,7 +801,7 @@ const Orders: React.FC = () => {
                 ) : (
                   <>
                     <Receipt className="w-5 h-5" />
-                    <span>Abuur Iib {estimatedTotal > 0 ? `- $${estimatedTotal.toFixed(2)}` : ''}</span>
+                    <span>Abuur Iib {estimatedTotal > 0 ? `- $${estimatedTotal.toFixed(2)}` : ''}{discount > 0 ? ` (Dhimis: $${discount.toFixed(2)})` : ''}</span>
                   </>
                 )}
               </button>

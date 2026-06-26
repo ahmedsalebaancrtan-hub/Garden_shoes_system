@@ -17,11 +17,20 @@ func RegisterRoute(r *gin.Engine) {
 	OrderHandler := handlers.RegisterOrderHandler()
 	PaymentHandler := handlers.RegisterPaymentHandler()
 	ReportHandler := handlers.RegisterReportHandler()
+	SalaryHandler := handlers.RegisterSalaryHandler()
 	UserGroup := ApiGroup.Group("/users")
 	{
+		UserGroup.GET("", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), UserHandler.GetUsers)
+		UserGroup.GET("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), UserHandler.GetUsers)
+		UserGroup.POST("", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), UserHandler.CreateUser)
+		UserGroup.POST("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), UserHandler.CreateUser)
 		UserGroup.POST("/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), UserHandler.CreateUser)
 		UserGroup.POST("/login", UserHandler.LoginUser)
 		UserGroup.GET("/whoami", middleware.Authenticated(), UserHandler.WhoAmI)
+		UserGroup.PUT("/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), UserHandler.UpdateUser)
+		UserGroup.PUT("/update/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), UserHandler.UpdateUser)
+		UserGroup.DELETE("/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), UserHandler.DeleteUser)
+		UserGroup.DELETE("/delete/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), UserHandler.DeleteUser)
 
 	}
 	SupplierGroup := ApiGroup.Group("/suppliers")
@@ -50,6 +59,7 @@ func RegisterRoute(r *gin.Engine) {
 	EmployeeGroup := ApiGroup.Group("/employees")
 	{
 		EmployeeGroup.POST("/create", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), EmployeeHandler.CreateEmployee)
+		EmployeeGroup.GET("", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF", "CASHIER"), EmployeeHandler.GetEmployees)
 		EmployeeGroup.GET("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF", "CASHIER"), EmployeeHandler.GetEmployees)
 		EmployeeGroup.PUT("/update/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), EmployeeHandler.UpdateEmployee)
 		EmployeeGroup.DELETE("/delete/:id", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), EmployeeHandler.DeleteEmployee)
@@ -70,5 +80,12 @@ func RegisterRoute(r *gin.Engine) {
 		ReportGroup.GET("/dashboard", middleware.Authenticated(), middleware.RoleRequired("ADMIN"), ReportHandler.GetDailyDashboard)
 		ReportGroup.GET("/customer-monthly", middleware.Authenticated(), ReportHandler.GetCustomerMonthlyReport)
 		ReportGroup.GET("/invoice/:order_id", middleware.Authenticated(), ReportHandler.GetSingleInvoiceReport)
+	}
+	SalaryGroup := ApiGroup.Group("/salaries")
+	{
+		SalaryGroup.POST("", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), SalaryHandler.CreateSalary)
+		SalaryGroup.POST("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), SalaryHandler.CreateSalary)
+		SalaryGroup.GET("", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), SalaryHandler.GetSalaries)
+		SalaryGroup.GET("/", middleware.Authenticated(), middleware.RoleRequired("ADMIN", "STAFF"), SalaryHandler.GetSalaries)
 	}
 }

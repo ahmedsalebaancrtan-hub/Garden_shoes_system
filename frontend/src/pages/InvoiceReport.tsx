@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Receipt, Printer, ArrowLeft, Download } from 'lucide-react';
+import { Receipt, Printer, ArrowLeft } from 'lucide-react';
 import axiosClient from '../api/axiosClient';
 import { type Order } from './Orders';
 
@@ -253,12 +253,14 @@ const InvoiceReport: React.FC = () => {
           </div>
           <div className="w-full sm:w-1/2 flex justify-between items-center px-4">
             <span className="font-bold text-slate-500">Tax / Discount:</span>
-            <span className="font-bold text-slate-800">$0.00</span>
+            <span className="text-amber-600 font-bold">
+              {Number(orderData?.discount || 0) > 0 ? `-$${Number(orderData?.discount || 0).toFixed(2)}` : '$0.00'}
+            </span>
           </div>
           <div className="w-full sm:w-1/2 flex justify-between items-center px-4 py-4 bg-slate-50 rounded-xl border border-slate-100 print:border-slate-300 print:bg-slate-100">
             <span className="text-lg font-black text-slate-800">Total Due:</span>
             <span className="text-2xl font-black text-garden-dark">
-              ${Number(orderData?.total_price || 0).toFixed(2)}
+              ${(Number(orderData?.total_price || 0) - Number(orderData?.discount || 0)).toFixed(2)}
             </span>
           </div>
         </div>

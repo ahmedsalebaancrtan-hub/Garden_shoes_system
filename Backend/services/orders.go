@@ -59,13 +59,17 @@ func (svc *OrderService) CreateOrder(data *dto.CreateOrderRequest) (int, *dto.Or
 		return http.StatusInternalServerError, nil, errors.New("waa ku guuldareystay inaan cusbooneysiiyo tirada kabaha dukaanka")
 	}
 
-	totalPrice := float64(data.Qty) * shoe.Price
+	totalPrice := (float64(data.Qty) * shoe.Price) - data.Discount
+	if totalPrice < 0 {
+		totalPrice = 0
+	}
 
 	order := models.Order{
 		CusID:      data.CusID,
 		ShoeID:     data.ShoeID,
 		EmpID:      data.EmpID,
 		Qty:        data.Qty,
+		Discount:   data.Discount,
 		TotalPrice: totalPrice,
 		OrderDate:  time.Now(),
 	}
@@ -104,9 +108,11 @@ func (svc *OrderService) CreateOrder(data *dto.CreateOrderRequest) (int, *dto.Or
 	}
 
 	response := &dto.OrderResponse{
-		OrderID:   order.ID,
-		Qty:       order.Qty,
-		OrderDate: order.OrderDate.Format("2006-01-02 15:04:05"),
+		OrderID:    order.ID,
+		Qty:        order.Qty,
+		Discount:   order.Discount,
+		TotalPrice: order.TotalPrice,
+		OrderDate:  order.OrderDate.Format("2006-01-02 15:04:05"),
 		Customer: &dto.CustomerResponse{
 			ID:      customer.ID,
 			CusName: customer.CusName,

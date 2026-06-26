@@ -16,14 +16,8 @@ import Login from '../pages/login';
 import Payments from '../pages/Payments';
 import Reports from '../pages/Reports';
 import InvoiceReport from '../pages/InvoiceReport';
-
-// Dummy component for pages we haven't built yet
-const PlaceholderPage = ({ title }: { title: string }) => (
-  <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-100 h-full flex flex-col items-center justify-center space-y-4">
-    <h2 className="text-3xl font-black text-slate-800">{title} Module</h2>
-    <p className="text-slate-500 font-medium bg-slate-100 px-4 py-2 rounded-lg">Coming soon: Development is in progress...</p>
-  </div>
-);
+import Salaries from '../pages/Salaries';
+import Users from '../pages/Users';
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
@@ -57,10 +51,12 @@ const AppRoutes: React.FC = () => {
             <Route path="/shoes" element={<Shoes />} />
             <Route path="/suppliers" element={<Suppliers />} />
             <Route path="/customers" element={<Customers />} />
+            <Route path="/salaries" element={<Salaries />} />
           </Route>
 
           {/* Admin Only */}
           <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+            <Route path="/users" element={<Users />} />
             <Route path="/employees" element={<Employees />} />
             <Route path="/reports" element={<Reports />} />
           </Route>
