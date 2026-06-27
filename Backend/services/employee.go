@@ -8,6 +8,7 @@ import (
 	dto "github.com/gardenshoes/ahmed/dto"
 	"github.com/gardenshoes/ahmed/models"
 	"github.com/gardenshoes/ahmed/repository"
+	"gorm.io/gorm"
 )
 
 type EmployeeService struct {
@@ -25,6 +26,17 @@ func (svc *EmployeeService) CreateEmployee(data *dto.CreateEmployeeRequest) (int
 	if err == nil {
 		return http.StatusConflict, nil, errors.New("shaqaale iimaylkaan wata ayaa mar hore la diwaangeliyey")
 	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return http.StatusInternalServerError, nil, errors.New("waa ku guuldareystay hubinta iimaylka shaqaalaha")
+	}
+
+	_, err = svc.Repo.GetEmployeeByPhoneIncludingDeleted(data.EmpPhone)
+	if err == nil {
+		return http.StatusBadRequest, nil, errors.New("Lambarka taleefankan horay ayaa loo diwaangeliyey!")
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return http.StatusInternalServerError, nil, errors.New("waa ku guuldareystay hubinta lambarka taleefanka")
+	}
 
 	// Badal qaabka taariikhda (String to time.Time)
 	parsedDate, err := time.Parse("2006-01-02", data.HireDate)
@@ -40,6 +52,7 @@ func (svc *EmployeeService) CreateEmployee(data *dto.CreateEmployeeRequest) (int
 		EmpShift:   data.EmpShift,
 		HireDate:   parsedDate,
 		JobTitle:   data.JobTitle,
+		BaseSalary: data.BaseSalary,
 	}
 
 	if err := svc.Repo.CreateEmployee(&employee); err != nil {
@@ -55,6 +68,7 @@ func (svc *EmployeeService) CreateEmployee(data *dto.CreateEmployeeRequest) (int
 		EmpShift:   employee.EmpShift,
 		HireDate:   employee.HireDate.Format("2006-01-02"),
 		JobTitle:   employee.JobTitle,
+		BaseSalary: employee.BaseSalary,
 	}
 
 	return http.StatusCreated, response, nil
@@ -78,6 +92,7 @@ func (svc *EmployeeService) ListAllEmployees() (int, []dto.EmployeeResponse, err
 			EmpShift:   e.EmpShift,
 			HireDate:   e.HireDate.Format("2006-01-02"),
 			JobTitle:   e.JobTitle,
+			BaseSalary: e.BaseSalary,
 		})
 	}
 
@@ -105,6 +120,7 @@ func (svc *EmployeeService) UpdateEmployee(id uint, data *dto.CreateEmployeeRequ
 	employee.EmpShift = data.EmpShift
 	employee.HireDate = parsedDate
 	employee.JobTitle = data.JobTitle
+	employee.BaseSalary = data.BaseSalary
 
 	if err := svc.Repo.UpdateEmployee(employee); err != nil {
 		return http.StatusInternalServerError, errors.New("waa ku guuldareystay casriyeynta shaqaalaha")

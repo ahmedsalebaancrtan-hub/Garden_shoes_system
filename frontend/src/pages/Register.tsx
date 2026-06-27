@@ -41,7 +41,7 @@ const Register: React.FC = () => {
       <div className="max-w-md w-full bg-slate-900/40 border border-garden-lime/20 rounded-2xl shadow-2xl p-8 backdrop-blur-sm space-y-6">
         <div className="text-center">
           <h2 className="text-4xl font-black text-white tracking-tight">
-            GARDEN<span className="text-garden-lime">SHOES</span>
+            GOLDEN<span className="text-yellow-500">SHOES</span>
           </h2>
           <p className="text-slate-300 text-sm mt-2 font-medium">
             Is Diiwaangeli Si Aad Uga Mid Noqoto Nidaamka
@@ -88,7 +88,7 @@ const Register: React.FC = () => {
                 value={formData.email}
                 onChange={handleChange}
                 className="w-full pl-10 pr-4 py-2.5 bg-garden-dark/50 border border-slate-700 rounded-xl text-white font-medium focus:outline-none focus:border-garden-lime focus:ring-2 focus:ring-garden-lime/20 transition duration-200"
-                placeholder="admin@garden.com"
+                placeholder="admin@golden.com"
               />
             </div>
           </div>

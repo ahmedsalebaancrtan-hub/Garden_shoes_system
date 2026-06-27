@@ -7,6 +7,7 @@ export interface Employee {
   emp_shift: string;
   hire_date: string;
   job_title: string;
+  base_salary: number;
 }
 
 export interface EmployeeInput {
@@ -17,4 +18,5 @@ export interface EmployeeInput {
   emp_shift: string;
   hire_date: string;
   job_title: string;
+  base_salary: number;
 }

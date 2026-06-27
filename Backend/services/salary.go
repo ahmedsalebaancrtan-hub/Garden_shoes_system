@@ -18,11 +18,17 @@ func NewSalaryService(repo *repository.SalaryRepo) *SalaryService {
 }
 
 func (svc *SalaryService) CreateSalary(data *dto.CreateSalaryRequest) (int, *models.Salary, error) {
-	netSalary := data.BaseSalary + data.Bonus - data.Deductions
+	var employee models.Employee
+	if err := svc.Repo.DB.First(&employee, data.EmployeeID).Error; err != nil {
+		return http.StatusBadRequest, nil, errors.New("shaqaalaha la doortay kama jiro nidaamka")
+	}
+
+	baseSalary := employee.BaseSalary
+	netSalary := baseSalary + data.Bonus - data.Deductions
 
 	salary := models.Salary{
 		EmployeeID:    data.EmployeeID,
-		BaseSalary:    data.BaseSalary,
+		BaseSalary:    baseSalary,
 		Bonus:         data.Bonus,
 		Deductions:    data.Deductions,
 		NetSalary:     netSalary,

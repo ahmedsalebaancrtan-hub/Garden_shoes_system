@@ -121,17 +121,20 @@ const Payments: React.FC = () => {
     return debtOrders.find((o) => o.o_id === Number(selectedOrderId)) || null;
   }, [selectedOrderId, debtOrders]);
 
+  // Order total_price is stored by the backend after the point-of-sale discount
+  // has already been applied. Treat it as the final net amount due here.
+  const finalNetAmountDue = (order: Order): number => toNumber(order.total_price);
+
   const calculateRemainingDebt = (order: Order): number => {
     const totalPaidForOrder = payments
       .filter((p) => p.order_id === order.o_id)
       .reduce((sum, p) => sum + toNumber(p.amount_paid), 0);
-    // Deduct discount before computing what is still owed
-    return toNumber(order.total_price) - toNumber(order.discount) - totalPaidForOrder;
+    return finalNetAmountDue(order) - totalPaidForOrder;
   };
 
-  // Net debt due after discount (used for modal cap + display)
+  // Net debt due after point-of-sale discount (used for modal cap + display)
   const netDebtDue = (order: Order): number => {
-    return toNumber(order.total_price) - toNumber(order.discount);
+    return finalNetAmountDue(order);
   };
 
   const totalCollected = useMemo(
@@ -164,7 +167,7 @@ const Payments: React.FC = () => {
   //   1. An order must be selected.
   //   2. The entered amount must be a positive number.
   //   3. OVERPAYMENT GUARD:
-  //      netDue = order.total_price - order.discount - order.total_amount_paid_so_far
+  //      netDue = order.final_net_amount_due - order.total_amount_paid_so_far
   //      where `total_amount_paid_so_far` is the sum of every previous payment
   //      recorded in the local `payments` array for this order.
   //      If amount_paid > netDue  →  BLOCK immediately with the required message.
@@ -191,8 +194,7 @@ const Payments: React.FC = () => {
     //
     //   Step A — Derive each component explicitly (no shorthand):
     if (selectedOrderDetails) {
-      const orderTotalPrice: number = toNumber(selectedOrderDetails.total_price);
-      const orderDiscount: number = toNumber(selectedOrderDetails.discount);
+      const orderFinalNetAmountDue: number = finalNetAmountDue(selectedOrderDetails);
 
       //   Step B — Compute total_amount_paid_so_far by summing every payment
       //             that has already been recorded for this specific order.
@@ -202,8 +204,8 @@ const Payments: React.FC = () => {
 
       //   Step C — Calculate the strict net amount still due for this order.
       //             Formula (from requirements):
-      //             netDue = total_price - discount - total_amount_paid_so_far
-      const netDue: number = orderTotalPrice - orderDiscount - totalAmountPaidSoFar;
+      //             netDue = final_net_amount_due - total_amount_paid_so_far
+      const netDue: number = orderFinalNetAmountDue - totalAmountPaidSoFar;
 
       //   Step D — BLOCK if the entered amount EXCEEDS the net due.
       //             Using a tiny epsilon (0.001) to guard against IEEE-754
@@ -517,7 +519,7 @@ const Payments: React.FC = () => {
                 <label className="block text-sm font-extrabold text-slate-700 mb-1.5">
                   Lacagta La Bixinayo ($) *
                 </label>
-                {/* The `max` attribute below is capped at netDue (total_price - discount - totalPaidSoFar)
+                {/* The `max` attribute below is capped at netDue (final net due - totalPaidSoFar)
                     so the browser's native number-spinner also prevents exceeding the remaining amount.
                     This mirrors the exact formula enforced in handleProcessPayment Guard 3. */}
                 <input
@@ -539,17 +541,16 @@ const Payments: React.FC = () => {
                 />
                 {/* Inline cap hint — shown only when an order is selected */}
                 {selectedOrderDetails && (() => {
-                  const orderTotalPrice: number = toNumber(selectedOrderDetails.total_price);
-                  const orderDiscount: number = toNumber(selectedOrderDetails.discount);
+                  const orderFinalNetAmountDue: number = finalNetAmountDue(selectedOrderDetails);
                   const totalAmountPaidSoFar: number = payments
                     .filter((p) => p.order_id === selectedOrderDetails.o_id)
                     .reduce((runningSum, p) => runningSum + toNumber(p.amount_paid), 0);
-                  const netDue: number = orderTotalPrice - orderDiscount - totalAmountPaidSoFar;
+                  const netDue: number = orderFinalNetAmountDue - totalAmountPaidSoFar;
                   return (
                     <p className="text-xs text-slate-500 mt-1.5 font-semibold">
                       Xadka ugu sareeya:{' '}
                       <span className="font-black text-red-600">${netDue.toFixed(2)}</span>
-                      {' '}(total − discount − horey la bixiyey)
+                      {' '}(final net total − horey la bixiyey)
                     </p>
                   );
                 })()}

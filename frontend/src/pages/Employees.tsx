@@ -45,6 +45,7 @@ const EmployeesAdmin: React.FC = () => {
     emp_shift: SHIFTS[0],
     hire_date: new Date().toISOString().split('T')[0],
     job_title: JOB_TITLES[0],
+    base_salary: 0,
   });
 
   const [toastMsg, setToastMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -81,6 +82,7 @@ const EmployeesAdmin: React.FC = () => {
         emp_shift: emp.emp_shift,
         hire_date: emp.hire_date ? emp.hire_date.split('T')[0] : '',
         job_title: emp.job_title,
+        base_salary: Number(emp.base_salary) || 0,
       });
     } else {
       setEditingId(null);
@@ -92,6 +94,7 @@ const EmployeesAdmin: React.FC = () => {
         emp_shift: SHIFTS[0],
         hire_date: new Date().toISOString().split('T')[0],
         job_title: JOB_TITLES[0],
+        base_salary: 0,
       });
     }
     setIsModalOpen(true);
@@ -219,6 +222,7 @@ const EmployeesAdmin: React.FC = () => {
                 <th className="px-6 py-4">Email</th>
                 <th className="px-6 py-4">Taleefan</th>
                 <th className="px-6 py-4">Shiftka</th>
+                <th className="px-6 py-4 text-right">Base Salary</th>
                 <th className="px-6 py-4">Taariikhda Shaqada</th>
                 <th className="px-6 py-4 text-right">Ficilada</th>
               </tr>
@@ -226,7 +230,7 @@ const EmployeesAdmin: React.FC = () => {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center">
+                  <td colSpan={9} className="px-6 py-12 text-center">
                     <div className="flex justify-center items-center space-x-2">
                       <div className="w-6 h-6 border-2 border-garden-dark border-t-transparent rounded-full animate-spin"></div>
                       <span className="text-slate-500 font-bold">Xogta baa soo socota...</span>
@@ -235,7 +239,7 @@ const EmployeesAdmin: React.FC = () => {
                 </tr>
               ) : filteredEmployees.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-slate-500 font-bold bg-slate-50/50">
+                  <td colSpan={9} className="px-6 py-12 text-center text-slate-500 font-bold bg-slate-50/50">
                     Wax shaqaale ah lagama helin nidaamka.
                   </td>
                 </tr>
@@ -259,6 +263,9 @@ const EmployeesAdmin: React.FC = () => {
                     <td className="px-6 py-4 font-medium text-slate-500">{emp.emp_email}</td>
                     <td className="px-6 py-4 font-bold text-slate-600">{emp.emp_phone}</td>
                     <td className="px-6 py-4">{getShiftBadge(emp.emp_shift || '')}</td>
+                    <td className="px-6 py-4 text-right font-black text-garden-dark">
+                      ${Number(emp.base_salary || 0).toFixed(2)}
+                    </td>
                     <td className="px-6 py-4 font-medium text-slate-500 text-xs">
                       {emp.hire_date ? new Date(emp.hire_date).toLocaleDateString('en-GB') : '—'}
                     </td>
@@ -341,7 +348,7 @@ const EmployeesAdmin: React.FC = () => {
                     value={formData.emp_email}
                     onChange={(e) => setFormData({ ...formData, emp_email: e.target.value })}
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-bold focus:outline-none focus:border-garden-lime focus:ring-4 focus:ring-garden-lime/20 transition-all placeholder-slate-400 disabled:opacity-50"
-                    placeholder="shaqaale@garden.so"
+                    placeholder="shaqaale@golden.so"
                   />
                 </div>
 
@@ -386,6 +393,21 @@ const EmployeesAdmin: React.FC = () => {
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
+                </div>
+
+                <div className="col-span-2">
+                  <label className="block text-sm font-extrabold text-slate-700 mb-1.5">Base Salary ($)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    required
+                    disabled={submitting}
+                    value={formData.base_salary}
+                    onChange={(e) => setFormData({ ...formData, base_salary: Number(e.target.value) || 0 })}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-bold focus:outline-none focus:border-garden-lime focus:ring-4 focus:ring-garden-lime/20 transition-all disabled:opacity-50"
+                    placeholder="Tusaale: 500.00"
+                  />
                 </div>
 
                 <div className="col-span-2">

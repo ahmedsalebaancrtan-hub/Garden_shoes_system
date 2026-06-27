@@ -150,7 +150,7 @@ const InvoiceReport: React.FC = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 pb-8 border-b-2 border-slate-100 print:border-slate-200">
           <div>
             <h1 className="text-4xl font-black tracking-tight text-garden-dark">
-              GARDEN<span className="text-garden-lime">SHOES</span>
+              GOLDEN<span className="text-amber-500">SHOES</span>
             </h1>
             <p className="text-sm font-bold text-slate-400 mt-1">Rasmi & Tayo Sare</p>
           </div>
@@ -271,7 +271,7 @@ const InvoiceReport: React.FC = () => {
             Waad ku mahadsan tahay inaad naga adeegatay. Soo dhawoow marwalba!
           </p>
           <p className="text-xs font-medium text-slate-300 mt-1">
-            Garden Shoes &copy; {new Date().getFullYear()}
+            Golden Shoes &copy; {new Date().getFullYear()}
           </p>
         </div>
 

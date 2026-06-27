@@ -204,7 +204,7 @@ const Dashboard: React.FC = () => {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="text-white space-y-2">
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight flex items-center gap-3">
-              Kusoo Dhawaada GardenShoes Hub, {user?.username || 'Maamule'}
+              Kusoo Dhawaada Golden Shoes Hub, {user?.username || 'Maamule'}
             </h1>
             <p className="text-garden-lime/80 font-medium text-sm sm:text-base max-w-2xl">
               Halkan waa xudunta maamulka alaabta, macaamiisha, iyo falanqaynta iibka dukaanka ee maanta.

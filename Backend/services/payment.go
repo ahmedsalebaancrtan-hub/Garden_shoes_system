@@ -25,8 +25,9 @@ func NewPaymentService(db *gorm.DB) *PaymentService {
 //
 //  1. Fetch the order and verify it is not already fully paid.
 //  2. Compute:
+//       finalNetAmountDue     = order.TotalPrice
 //       totalAmountPaidSoFar  = SUM of all previous payments for this order
-//       netDue                = order.TotalPrice - order.Discount - totalAmountPaidSoFar
+//       netDue                = finalNetAmountDue - totalAmountPaidSoFar
 //  3. OVERPAYMENT GUARD:
 //       If data.AmountPaid > netDue  →  reject with HTTP 400.
 //       A floating-point epsilon (floatEpsilon = 0.001) absorbs IEEE-754 rounding noise.
@@ -54,9 +55,10 @@ func (svc *PaymentService) ProcessDebtPayment(data *dto.ProcessPaymentRequest) (
 		Scan(&totalAmountPaidSoFar)
 
 	// ── Step 4: Calculate the strict net amount still due ─────────────────────
-	//    Formula (from requirements):
-	//    netDue = order.TotalPrice - order.Discount - totalAmountPaidSoFar
-	netDue := order.TotalPrice - order.Discount - totalAmountPaidSoFar
+	//    order.TotalPrice is already the final net amount after the point-of-sale
+	//    discount, so do not subtract order.Discount again in the payment flow.
+	finalNetAmountDue := order.TotalPrice
+	netDue := finalNetAmountDue - totalAmountPaidSoFar
 
 	// ── Step 5: Secondary guard — netDue must be positive ─────────────────────
 	//    If the order was not marked PAID but all money has been collected

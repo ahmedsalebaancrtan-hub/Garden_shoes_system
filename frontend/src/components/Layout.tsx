@@ -46,8 +46,8 @@ const Layout: React.FC = () => {
       {/* Sidebar */}
       <aside className="w-64 bg-garden-dark text-white flex flex-col shadow-xl z-20">
         <div className="h-16 flex items-center justify-center border-b border-white/10">
-          <h1 className="text-2xl font-black tracking-tight">
-            GARDEN<span className="text-garden-lime">SHOES</span>
+          <h1 className="text-xl font-bold tracking-tight text-white">
+            GOLDEN<span className="text-yellow-500">SHOES</span>
           </h1>
         </div>
         
@@ -95,7 +95,7 @@ const Layout: React.FC = () => {
           </div>
           <div className="flex items-center space-x-4">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-bold text-slate-800">{user?.username || 'GARDEN USER'}</p>
+              <p className="text-sm font-bold text-slate-800">{user?.username || 'GOLDEN USER'}</p>
               <p className="text-[10px] font-black tracking-wider text-garden-dark bg-garden-lime/30 inline-block px-2.5 py-0.5 rounded-full mt-0.5">
                 {user?.role || 'UNKNOWN'}
               </p>

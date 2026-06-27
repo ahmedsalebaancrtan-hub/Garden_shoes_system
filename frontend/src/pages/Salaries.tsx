@@ -6,6 +6,7 @@ interface Employee {
   emp_id: number;
   emp_name: string;
   job_title?: string;
+  base_salary?: number;
 }
 
 interface Salary {
@@ -31,6 +32,7 @@ const Salaries: React.FC = () => {
 
   // Form states
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | ''>('');
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [employeeQuery, setEmployeeQuery] = useState('');
   const [showEmployeeDropdown, setShowEmployeeDropdown] = useState(false);
   
@@ -71,6 +73,7 @@ const Salaries: React.FC = () => {
 
   const resetForm = () => {
     setSelectedEmployeeId('');
+    setSelectedEmployee(null);
     setEmployeeQuery('');
     setShowEmployeeDropdown(false);
     setBaseSalary('');
@@ -252,9 +255,17 @@ const Salaries: React.FC = () => {
                 {selectedEmployeeId ? (
                   <div className="flex items-center justify-between w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold">
                     <span>
-                      {employees.find(e => e.emp_id === selectedEmployeeId)?.emp_name}
+                      {selectedEmployee?.emp_name || employees.find(e => e.emp_id === selectedEmployeeId)?.emp_name}
                     </span>
-                    <button type="button" onMouseDown={() => setSelectedEmployeeId('')} className="text-slate-400 hover:text-red-500">
+                    <button
+                      type="button"
+                      onMouseDown={() => {
+                        setSelectedEmployeeId('');
+                        setSelectedEmployee(null);
+                        setBaseSalary('');
+                      }}
+                      className="text-slate-400 hover:text-red-500"
+                    >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
@@ -281,6 +292,8 @@ const Salaries: React.FC = () => {
                               key={e.emp_id}
                               onMouseDown={() => {
                                 setSelectedEmployeeId(e.emp_id);
+                                setSelectedEmployee(e);
+                                setBaseSalary(Number(e.base_salary) || 0);
                                 setEmployeeQuery('');
                                 setShowEmployeeDropdown(false);
                               }}
@@ -317,8 +330,8 @@ const Salaries: React.FC = () => {
                     min="0"
                     step="0.01"
                     value={baseSalary}
-                    onChange={(e) => setBaseSalary(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-garden-lime focus:ring-4 focus:ring-garden-lime/20"
+                    readOnly
+                    className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 cursor-not-allowed"
                     required
                   />
                 </div>

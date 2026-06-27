@@ -23,6 +23,12 @@ func (r *EmployeeRepo) GetEmployeeByEmail(email string) (models.Employee, error)
 	return employee, err
 }
 
+func (r *EmployeeRepo) GetEmployeeByPhoneIncludingDeleted(phone string) (models.Employee, error) {
+	var employee models.Employee
+	err := r.DB.Unscoped().Where("emp_phone = ?", phone).First(&employee).Error
+	return employee, err
+}
+
 func (r *EmployeeRepo) GetAllEmployees() ([]models.Employee, error) {
 	var employees []models.Employee
 	err := r.DB.Find(&employees).Error

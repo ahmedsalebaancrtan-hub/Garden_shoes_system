@@ -15,6 +15,7 @@ type Employee struct {
 	EmpShift   string    `gorm:"type:varchar(50);not null" json:"emp_shift"`
 	HireDate   time.Time `gorm:"type:date;not null" json:"hire_date"`
 	JobTitle   string    `gorm:"type:varchar(100);not null" json:"job_title"`
+	BaseSalary float64   `gorm:"type:numeric(10,2);default:0.00" json:"base_salary"`
 
 	// Has Many Relationship
 	Orders []Order `gorm:"foreignKey:EmpID" json:"orders,omitempty"`

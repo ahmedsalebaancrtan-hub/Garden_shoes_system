@@ -28,7 +28,7 @@ const Login: React.FC = () => {
         {/* Header-ka Brand-ka */}
         <div className="text-center">
           <h2 className="text-4xl font-black text-white tracking-tight">
-            GARDEN<span className="text-garden-lime">SHOES</span>
+            GOLDEN<span className="text-yellow-500">SHOES</span>
           </h2>
           <p className="text-slate-300 text-sm mt-2 font-medium">
             Geli xogtaada si aad u maamusho nidaamka dukaanka
@@ -58,7 +58,7 @@ const Login: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-garden-dark/50 border border-slate-700 rounded-xl text-white font-medium focus:outline-none focus:border-garden-lime focus:ring-2 focus:ring-garden-lime/20 transition duration-200 placeholder-slate-500"
-                placeholder="admin@garden.com"
+                placeholder="admin@golden.com"
               />
             </div>
           </div>
